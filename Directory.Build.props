@@ -1,0 +1,50 @@
+<Project>
+
+  <!-- Set the repository root into a variable -->
+  <PropertyGroup>
+    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>9</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--We cannot do this if we are using Fody, unfortunately, due to a Fody bug
+    https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/issues/1000 -->
+    <!--<PublishRepositoryUrl>true</PublishRepositoryUrl>-->
+    <!--<EmbedUntrackedSources>true</EmbedUntrackedSources>-->
+    <!--<IncludeSymbols>true</IncludeSymbols>-->
+    <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <!-- Icon settings -->
+  <PropertyGroup>
+    <!-- Package icon setting is relative to this file -->
+    <PackageIcon>Icon.jpg</PackageIcon>
+    <!-- Application icon setting needs absolute path or it will assume the value here is relative to the project file -->
+    <ApplicationIcon>$(SourceRoot)Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(SourceRoot)Icon.jpg" Pack="true" Visible="false" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.4" PrivateAssets="all" /> -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.3.37">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.164" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+
+</Project>

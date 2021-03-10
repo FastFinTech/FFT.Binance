@@ -5,6 +5,7 @@ namespace FFT.Binance
 {
   using System;
   using System.Buffers;
+  using System.Collections.Concurrent;
   using System.Collections.Generic;
   using System.Collections.Immutable;
   using System.Diagnostics;
@@ -19,8 +20,9 @@ namespace FFT.Binance
   using System.Text.Json;
   using System.Text.Json.Serialization;
   using System.Threading;
+  using System.Threading.Channels;
   using System.Threading.Tasks;
-  using FFT.Binance.TickerStreams;
+  using FFT.Binance.MarketDataStreams;
   using FFT.Disposables;
   using FFT.TimeStamps;
 
@@ -44,6 +46,7 @@ namespace FFT.Binance
     }.AsReadOnly();
 
     private readonly HttpClient _client;
+    private readonly ClientWebSocket _webSocket;
     private readonly byte[] _secretKeyBytes;
     private readonly JsonSerializerOptions _serializerOptions;
 
@@ -65,6 +68,8 @@ namespace FFT.Binance
       _client = new HttpClient(new SocketsHttpHandler());
       _client.BaseAddress = new Uri(_endPoints[0] + '/');
       _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", Options.ApiKey);
+
+      _webSocket = new ClientWebSocket();
     }
 
     /// <summary>
@@ -88,6 +93,7 @@ namespace FFT.Binance
     protected override void CustomDispose()
     {
       _client.Dispose();
+      _webSocket.Dispose();
     }
 
     private async Task<T> ParseResponse<T>(HttpResponseMessage response)
@@ -105,9 +111,7 @@ namespace FFT.Binance
       // TODO: Parse and store the
       // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
 
-      var json = await response.Content.ReadAsStringAsync();
-      return JsonSerializer.Deserialize<T>(json, _serializerOptions)!;
-      //return (await response.Content.ReadFromJsonAsync<T>(_serializerOptions, DisposedToken))!;
+      return (await response.Content.ReadFromJsonAsync<T>(_serializerOptions, DisposedToken))!;
     }
 
     /// <summary>
@@ -123,6 +127,29 @@ namespace FFT.Binance
       // TODO: This should perhaps be base64 representation instead, I'm not
       // sure yet.
       return Encoding.UTF8.GetString(signatureBytes);
+    }
+
+    private async Task WorkWebSocket()
+    {
+      try
+      {
+        while (true)
+        {
+          await _webSocket.ConnectAsync(new Uri($"wss://stream.binance.com:9443/stream"), DisposedToken);
+        }
+      }
+      catch (OperationCanceledException)
+      {
+        return;
+      }
+      catch (ObjectDisposedException)
+      {
+        return;
+      }
+      catch (Exception x)
+      {
+        Debug.Fail(x.ToString());
+      }
     }
   }
 
@@ -235,7 +262,7 @@ namespace FFT.Binance
 
   public partial class BinanceApiClient
   {
-    public async IAsyncEnumerable<OrderBook> GetDepthStream(string symbol, bool rapid, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<Book> GetDepthStream(string symbol, bool rapid, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
       var bufferWriter = new ArrayBufferWriter<byte>();
       using var cts = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
@@ -249,7 +276,7 @@ namespace FFT.Binance
       await ws.SendAsync(Encoding.UTF8.GetBytes(subscribeMessage), WebSocketMessageType.Text, true, cts.Token);
 
       var initialDepth = await GetOrderBook(symbol, 1000); // TODO: Add cancellation
-      var orderBook = OrderBook.From(initialDepth);
+      var orderBook = Book.From(initialDepth);
       var diff = await ReadDiff(ws, bufferWriter, cts.Token);
       while (diff.UpdateIdTo <= initialDepth.LastUpdateId)
         diff = await ReadDiff(ws, bufferWriter, cts.Token);
@@ -262,27 +289,159 @@ namespace FFT.Binance
       }
     }
 
-    private async Task<DepthStreamDiff> ReadDiff(ClientWebSocket ws, ArrayBufferWriter<byte> writer, CancellationToken cancellationToken)
+    private async Task<BookUpdate> ReadDiff(ClientWebSocket ws, ArrayBufferWriter<byte> writer, CancellationToken cancellationToken)
     {
-start:
-      writer.Clear();
-      var result = await ws.ReceiveAsync(writer.GetMemory(1024 * 1024), cancellationToken);
-      writer.Advance(result.Count);
-      while (!result.EndOfMessage)
+      // At 1000 levels deep, the messages can be fairly long. I didn't spend
+      // long testing, but the first single update I saw was 6kb. I think it
+      // doesn't hurt to have a re-usable 1Mb buffer inside the writer.
+      const int BUFFER_SIZE = 1024 * 1024;
+      while (true)
       {
-        result = await ws.ReceiveAsync(writer.GetMemory(1024 * 1024), cancellationToken);
+        // TODO: Really just need to reset the pointer in the writer. Clearing
+        // it (by resetting all the values in the buffer) is overkill.
+        writer.Clear();
+
+        var result = await ws.ReceiveAsync(writer.GetMemory(BUFFER_SIZE), cancellationToken);
         writer.Advance(result.Count);
-      }
 
-      var payload = Encoding.UTF8.GetString(writer.WrittenSpan);
-      var diff = JsonSerializer.Deserialize<DepthStreamDiff>(writer.WrittenSpan, _serializerOptions)!;
-      if (diff.EventType != "depthUpdate")
+        while (!result.EndOfMessage)
+        {
+          result = await ws.ReceiveAsync(writer.GetMemory(BUFFER_SIZE), cancellationToken);
+          writer.Advance(result.Count);
+        }
+
+        // Other kinds of control messages also come through. When they do, the
+        // diff deserializes with missing property values, so we check the
+        // EvenType property to make sure we have a valid diff. Otherwise just
+        // read the next message, hence the while loop.
+        var diff = JsonSerializer.Deserialize<BookUpdate>(writer.WrittenSpan, _serializerOptions)!;
+        if (diff.EventType != "depthUpdate")
+          return diff;
+      }
+    }
+  }
+
+  public partial class BinanceApiClient
+  {
+    private sealed class WebsocketConnection : DisposeBase
+    {
+      private readonly BinanceApiClient _client;
+      private readonly ClientWebSocket _ws;
+      private readonly Channel<string> _newSubscriptions;
+      private readonly Func<object, Task> _messageHandler;
+
+      public WebsocketConnection(BinanceApiClient client, Func<object, Task> messageHandler)
       {
-        Debugger.Break();
-        goto start;
+        _client = client;
+        _ws = new ClientWebSocket();
+        _newSubscriptions = Channel.CreateBounded<string>(1024);
+        _messageHandler = messageHandler;
+        Task.Run(Work);
       }
 
-      return diff;
+      protected override void CustomDispose()
+      {
+        _ws.Dispose();
+      }
+
+      private async Task Work()
+      {
+        try
+        {
+          await _ws.ConnectAsync(new Uri($"wss://stream.binance.com:9443/stream"), DisposedToken);
+          Task.Run(DoSubscriptions);
+          Task.Run(ReadMessages);
+        }
+        catch (Exception x)
+        {
+          Dispose(x);
+        }
+      }
+
+      async Task DoSubscriptions()
+      {
+        try
+        {
+          var id = 0;
+          while (true)
+          {
+            var subscription = await _newSubscriptions.Reader.ReadAsync(DisposedToken);
+            var message = JsonSerializer.Serialize(new
+            {
+              id = ++id,
+              method = "SUBSCRIBE",
+              @params = new[] { subscription.Name },
+            }).ToUtf8();
+            await _ws.SendAsync(message, WebSocketMessageType.Text, true, DisposedToken);
+          }
+        }
+        catch (Exception x)
+        {
+          Dispose(x);
+        }
+      }
+
+      async Task ReadMessages()
+      {
+        try
+        {
+          const int BUFFER_SIZE = 1024 * 1024;
+          var buffer = new ArrayBufferWriter<byte>(BUFFER_SIZE);
+          while (true)
+          {
+            // At 1000 levels deep, the order book update messages can be fairly long. I didn't spend
+            // long testing, but the first single update I saw was 6kb. I think it
+            // doesn't hurt to have a re-usable 1Mb buffer inside the writer.
+            while (true)
+            {
+              // TODO: Really just need to reset the pointer in the writer. Clearing
+              // it (by resetting all the values in the buffer) is overkill.
+              buffer.Clear();
+
+              var result = await _ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), DisposedToken);
+              buffer.Advance(result.Count);
+
+              while (!result.EndOfMessage)
+              {
+                result = await _ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), DisposedToken);
+                buffer.Advance(result.Count);
+              }
+
+              await _messageHandler(StreamObjectDeserializer.Deserialize(buffer.WrittenSpan));
+
+              // Other kinds of control messages also come through. When they do, the
+              // diff deserializes with missing property values, so we check the
+              // EvenType property to make sure we have a valid diff. Otherwise just
+              // read the next message, hence the while loop.
+              var diff = JsonSerializer.Deserialize<BookUpdate>(buffer.WrittenSpan, _client._serializerOptions)!;
+              if (diff.EventType != "depthUpdate")
+                return diff;
+            }
+          }
+        }
+        catch (Exception x)
+        {
+          Dispose(x);
+        }
+      }
+    }
+
+    private interface ISubscription
+    {
+      string Name { get; }
+    }
+
+    private static class StreamObjectDeserializer
+    {
+      public static object Deserialize(ReadOnlySpan<byte> messageBytes)
+      {
+
+      }
+    }
+
+    private struct StreamEvent
+    {
+      public string StreamName { get; set; }
     }
   }
 }

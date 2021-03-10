@@ -1,13 +1,10 @@
 ﻿// Copyright (c) True Goodwill. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace FFT.Binance.MarketDataStreams
+namespace FFT.Binance
 {
   using System;
-  using System.Collections.Concurrent;
-  using System.Collections.Generic;
   using System.Text.Json.Serialization;
-  using FFT.Binance.Serialization;
   using FFT.TimeStamps;
   using LadderMemoryOwner = System.Buffers.IMemoryOwner<(decimal Price, decimal Qty)>;
 

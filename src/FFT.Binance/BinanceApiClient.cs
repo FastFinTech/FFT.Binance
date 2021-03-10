@@ -5,77 +5,85 @@ namespace FFT.Binance
 {
   using System;
   using System.Buffers;
-  using System.Collections.Concurrent;
   using System.Collections.Generic;
   using System.Collections.Immutable;
-  using System.Diagnostics;
   using System.Globalization;
   using System.Linq;
   using System.Net.Http;
   using System.Net.Http.Json;
   using System.Net.WebSockets;
-  using System.Runtime.CompilerServices;
-  using System.Security.Cryptography;
   using System.Text;
   using System.Text.Json;
-  using System.Text.Json.Serialization;
   using System.Threading;
-  using System.Threading.Channels;
   using System.Threading.Tasks;
-  using FFT.Binance.MarketDataStreams;
+  using FFT.Binance.Serialization;
   using FFT.Disposables;
-  using FFT.TimeStamps;
+  using Nito.AsyncEx;
 
   /// <summary>
-  /// Create a long-lived singleton instance of this class and use it throughout
-  /// your application. Once instance per connection.
+  /// Provides access to Binance market data. This is a single-use object. It
+  /// disposes itself when the connection drops.
   /// </summary>
-  public sealed partial class BinanceApiClient : DisposeBase, IDisposable
+  public sealed partial class BinanceApiClient : AsyncDisposeBase, IAsyncDisposable
   {
-    private static readonly IReadOnlyList<string> _endPoints = new List<string>
-    {
-      "https://api.binance.com",  // The main api endpoint
-      "https://api1.binance.com", // Failover endpoints in case of system degradation
-      "https://api2.binance.com",
-      "https://api3.binance.com",
-    }.AsReadOnly();
-
     private static readonly IReadOnlyList<int> _orderBookDepthLimits = new List<int>
     {
       5, 10, 20, 50, 100, 500, 1000, 5000,
     }.AsReadOnly();
 
+    /// <summary>
+    /// Used for making rest api requests.
+    /// </summary>
     private readonly HttpClient _client;
-    private readonly ClientWebSocket _webSocket;
-    private readonly byte[] _secretKeyBytes;
-    private readonly JsonSerializerOptions _serializerOptions;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BinanceApiClient"/> class.
+    /// Used to track completion of the Work method. Disposal triggers
+    /// completion of the method via cancelling a cancellation token, then waits
+    /// for the task to be completed.
     /// </summary>
-    /// <param name="options">Contains the configurable options for this
-    /// connection.</param>
-    public BinanceApiClient(BinanceApiClientOptions options)
+    private readonly Task _workTask;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BinanceApiClient"/>
+    /// class and triggers immediate connection to the streaming websocket.
+    /// </summary>
+    /// <param name="options">Configures the client, particularly for
+    /// authentication. Can be left <c>null</c> if you are only accessing
+    /// functions that do not require authentication.</param>
+    public BinanceApiClient(BinanceApiClientOptions? options)
     {
-      Options = options;
+      // This allows connection-reuse for multiple rest api calls. It requires
+      // targeting net5 as discussed here:
+      // https://github.com/dotnet/runtime/issues/24613
+      _client = new(new SocketsHttpHandler());
+      _client.BaseAddress = new("https://api.binance.com");
 
-      _secretKeyBytes = Encoding.UTF8.GetBytes(options.SecretKey);
-      _serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-      _serializerOptions.Converters.Add(new TimeStampConverter());
-      _serializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
-      _serializerOptions.PropertyNameCaseInsensitive = false;
+      if (options is not null)
+      {
+        Options = options;
+        _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", Options.ApiKey);
+      }
 
-      _client = new HttpClient(new SocketsHttpHandler());
-      _client.BaseAddress = new Uri(_endPoints[0] + '/');
-      _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", Options.ApiKey);
-
-      _webSocket = new ClientWebSocket();
+      _workTask = Task.Run(Work);
     }
 
+    /// <inheritdoc/>
+    protected override ValueTask CustomDisposeAsync()
+    {
+      _client.Dispose();
+      return new(_workTask);
+    }
+  }
+
+  // Utility stuff
+  public partial class BinanceApiClient
+  {
     /// <summary>
-    /// Contains the configurable options for this connection.
+    /// Configures this <see cref="BinanceApiClient"/> instance. May be
+    /// <c>null</c> if this instance is not intended for use with functions that
+    /// require authentication.
     /// </summary>
-    public BinanceApiClientOptions Options { get; }
+    public BinanceApiClientOptions? Options { get; }
 
     /// <summary>
     /// Current used weight for the local IP for all request rate limiters
@@ -89,72 +97,6 @@ namespace FFT.Binance
     /// </summary>
     public int RetryAfterSeconds { get; private set; } = 0;
 
-    /// <inheritdoc/>
-    protected override void CustomDispose()
-    {
-      _client.Dispose();
-      _webSocket.Dispose();
-    }
-
-    private async Task<T> ParseResponse<T>(HttpResponseMessage response)
-    {
-      if (response.Headers.TryGetValues("X-MBX-USED-WEIGHT", out var usedWeightResponse))
-        UsedWeight = int.Parse(usedWeightResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
-
-      if (response.Headers.TryGetValues("Retry-After", out var retryAfterResponse))
-        RetryAfterSeconds = int.Parse(retryAfterResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
-      else
-        RetryAfterSeconds = 0;
-
-      await RequestFailedException.ThrowIfNecessary(response);
-
-      // TODO: Parse and store the
-      // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
-
-      return (await response.Content.ReadFromJsonAsync<T>(_serializerOptions, DisposedToken))!;
-    }
-
-    /// <summary>
-    /// Creates a signature value to add to the end of a query string.
-    /// </summary>
-    /// <param name="queryString">The entire query string NOT including the
-    /// leading '?'.</param>
-    private string CreateSignature(string queryString)
-    {
-      var queryStringBytes = Encoding.UTF8.GetBytes(queryString);
-      using var hmac = new HMACSHA256(_secretKeyBytes);
-      var signatureBytes = hmac.ComputeHash(queryStringBytes);
-      // TODO: This should perhaps be base64 representation instead, I'm not
-      // sure yet.
-      return Encoding.UTF8.GetString(signatureBytes);
-    }
-
-    private async Task WorkWebSocket()
-    {
-      try
-      {
-        while (true)
-        {
-          await _webSocket.ConnectAsync(new Uri($"wss://stream.binance.com:9443/stream"), DisposedToken);
-        }
-      }
-      catch (OperationCanceledException)
-      {
-        return;
-      }
-      catch (ObjectDisposedException)
-      {
-        return;
-      }
-      catch (Exception x)
-      {
-        Debug.Fail(x.ToString());
-      }
-    }
-  }
-
-  public partial class BinanceApiClient
-  {
     /// <summary>
     /// This method completes successfully if a connection ping test succeeded.
     /// </summary>
@@ -174,8 +116,27 @@ namespace FFT.Binance
       using var response = await _client.SendAsync(request);
       return await ParseResponse<ServerTimeResponse>(response);
     }
+
+    private async Task<T> ParseResponse<T>(HttpResponseMessage response)
+    {
+      if (response.Headers.TryGetValues("X-MBX-USED-WEIGHT", out var usedWeightResponse))
+        UsedWeight = int.Parse(usedWeightResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
+
+      if (response.Headers.TryGetValues("Retry-After", out var retryAfterResponse))
+        RetryAfterSeconds = int.Parse(retryAfterResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
+      else
+        RetryAfterSeconds = 0;
+
+      await RequestFailedException.ThrowIfNecessary(response);
+
+      // TODO: Parse and store the
+      // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
+
+      return (await response.Content.ReadFromJsonAsync<T>(SerializationOptions.Instance, DisposedToken))!;
+    }
   }
 
+  // Market data (rest api)
   public partial class BinanceApiClient
   {
     /// <summary>
@@ -190,7 +151,7 @@ namespace FFT.Binance
       if (!_orderBookDepthLimits.Contains(limit))
         throw new ArgumentException(nameof(limit));
 
-      using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/depth?symbol={symbol}&limit={limit}");
+      using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/depth?symbol={symbol.ToUpperInvariant()}&limit={limit}");
       using var response = await _client.SendAsync(request);
       return await ParseResponse<OrderBookResponse>(response);
     }
@@ -260,188 +221,239 @@ namespace FFT.Binance
     }
   }
 
+  // Streams
   public partial class BinanceApiClient
   {
-    public async IAsyncEnumerable<Book> GetDepthStream(string symbol, bool rapid, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Signals the addition or removal of subscriptions.
+    /// </summary>
+    private readonly AsyncAutoResetEvent _signalEvent = new(false);
+
+    /// <summary>
+    /// Used to marshal new subscription requests into a thread-safe context.
+    /// Null when disposal has begun.
+    /// </summary>
+    private ImmutableList<Subscription>? _newSubscriptions = ImmutableList<Subscription>.Empty;
+
+    /// <summary>
+    /// Used to marshal subscription cancellations into a thread-safe context.
+    /// Null when disposal has begun.
+    /// </summary>
+    private ImmutableList<Subscription>? _cancelSubscriptions = ImmutableList<Subscription>.Empty;
+
+    /// <summary>
+    /// Gets a subscription to the given <paramref name="streamInfo"/>.
+    /// </summary>
+    public async ValueTask<ISubscription> Subscribe(StreamInfo streamInfo)
     {
-      var bufferWriter = new ArrayBufferWriter<byte>();
-      using var cts = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
-      using var ws = new ClientWebSocket();
-      await ws.ConnectAsync(new Uri($"wss://stream.binance.com:9443/ws"), cts.Token);
-
-      var subscribeMessage = rapid
-        ? @"{""method"": ""SUBSCRIBE"",""params"": [""btcusdt@depth@100ms""],""id"": 1}"
-        : @"{""method"": ""SUBSCRIBE"",""params"": [""btcusdt@depth""],""id"": 1}";
-
-      await ws.SendAsync(Encoding.UTF8.GetBytes(subscribeMessage), WebSocketMessageType.Text, true, cts.Token);
-
-      var initialDepth = await GetOrderBook(symbol, 1000); // TODO: Add cancellation
-      var orderBook = Book.From(initialDepth);
-      var diff = await ReadDiff(ws, bufferWriter, cts.Token);
-      while (diff.UpdateIdTo <= initialDepth.LastUpdateId)
-        diff = await ReadDiff(ws, bufferWriter, cts.Token);
-
+      var subscription = new Subscription(this, streamInfo);
       while (true)
       {
-        orderBook = orderBook.ApplyDiff(diff);
-        yield return orderBook;
-        diff = await ReadDiff(ws, bufferWriter, cts.Token);
+        var original = Interlocked.CompareExchange(ref _newSubscriptions, null, null);
+        if (original is null)
+        {
+          // We have been disposed. Disposing the subscription before we return
+          // it will "complete" the message channel within it, signalling to the
+          // user code that the subscription will not yield data and a new
+          // subscription should be requested (from a new
+          // BinanceMarketDataClient)
+          await subscription.DisposeAsync();
+          return subscription;
+        }
+        else
+        {
+          var @new = original.Add(subscription);
+          var result = Interlocked.CompareExchange(ref _newSubscriptions, @new, original);
+          if (ReferenceEquals(original, result))
+          {
+            // Signal the presence of a new subscription to the Work method.
+            _signalEvent.Set();
+            return subscription;
+          }
+        }
+
+        // Threadrace. We lost. Start again.
       }
     }
 
-    private async Task<BookUpdate> ReadDiff(ClientWebSocket ws, ArrayBufferWriter<byte> writer, CancellationToken cancellationToken)
+    /// <summary>
+    /// Called by the Subscription object when it is disposed.
+    /// </summary>
+    private void Remove(Subscription subscription)
     {
-      // At 1000 levels deep, the messages can be fairly long. I didn't spend
-      // long testing, but the first single update I saw was 6kb. I think it
-      // doesn't hurt to have a re-usable 1Mb buffer inside the writer.
-      const int BUFFER_SIZE = 1024 * 1024;
       while (true)
       {
-        // TODO: Really just need to reset the pointer in the writer. Clearing
-        // it (by resetting all the values in the buffer) is overkill.
-        writer.Clear();
+        var original = Interlocked.CompareExchange(ref _cancelSubscriptions, null, null);
+        if (original is null)
+        {
+          // We have been disposed. There's nothing to do so just return.
+          // Execution reaches here This happens when, during disposal, at the
+          // end of the "Work" method, we dispose all the subscription objects.
+          return;
+        }
 
-        var result = await ws.ReceiveAsync(writer.GetMemory(BUFFER_SIZE), cancellationToken);
-        writer.Advance(result.Count);
+        // If execution reaches here, the subscription was disposed by user code
+        // that no longer wants to receive subscription data.
+        var @new = original.Add(subscription);
+        if (ReferenceEquals(@new, original)) return;
+        var result = Interlocked.CompareExchange(ref _cancelSubscriptions, @new, original);
+        if (ReferenceEquals(original, result))
+        {
+          // Signal the presence of a subscription cancellation to the Work method.
+          _signalEvent.Set();
+          return;
+        }
+
+        // Threadrace. We lost. Start again.
+      }
+    }
+
+    private async Task Work()
+    {
+      // Setup storage for parsing incoming messages
+      const int BUFFER_SIZE = 1024 * 1024;
+      var buffer = new ArrayBufferWriter<byte>(BUFFER_SIZE);
+
+      // Some helper variables
+      var requestId = 0;
+      var streams = new Dictionary<string, Stream>();
+
+      // The actual websocket
+      using var ws = new ClientWebSocket();
+
+      try
+      {
+        await ws.ConnectAsync(new Uri("wss://stream.binance.com:9443/stream"), DisposedToken);
+        var readTask = ReadMessage(ws, buffer, DisposedToken);
+
+        while (true)
+        {
+          // Insert all new subscriptions.
+          var newSubscriptions = Interlocked.Exchange(ref _newSubscriptions, ImmutableList<Subscription>.Empty)!;
+          foreach (var subscription in newSubscriptions)
+          {
+            if (!streams.TryGetValue(subscription.StreamInfo.Name, out var stream))
+            {
+              stream = subscription.StreamInfo.Type switch
+              {
+                StreamType.FullDepth => new FullDepthStream(subscription.StreamInfo),
+                StreamType.BookTicker => new BookTickerStream(subscription.StreamInfo),
+                StreamType.BookTickerAllMarkets => new BookTickerStream(subscription.StreamInfo),
+                _ => throw new NotImplementedException(),
+              };
+              await stream.Initiate(this);
+              streams[subscription.StreamInfo.Name] = stream;
+              var messageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+              {
+                id = ++requestId,
+                method = "SUBSCRIBE",
+                @params = new[] { subscription.StreamInfo.Name },
+              }));
+              await ws.SendAsync(messageBytes, WebSocketMessageType.Text, true, DisposedToken);
+            }
+
+            await stream.Add(subscription);
+          }
+
+          // Remove all canceled subscriptions
+          var canceledSubscriptions = Interlocked.Exchange(ref _cancelSubscriptions, ImmutableList<Subscription>.Empty)!;
+          foreach (var subscription in canceledSubscriptions)
+          {
+            // NB: There's no need to dispose the "subscription" object. It's
+            // already disposed -- that's how execution reaches here.
+            if (streams.TryGetValue(subscription.StreamInfo.Name, out var stream))
+            {
+              await stream.Remove(subscription);
+              if (stream.SubscriptionCount == 0)
+              {
+                streams.Remove(subscription.StreamInfo.Name);
+                var messageBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+                {
+                  id = ++requestId,
+                  method = "UNSUBSCRIBE",
+                  @params = new[] { subscription.StreamInfo.Name },
+                }));
+                await ws.SendAsync(messageBytes, WebSocketMessageType.Text, true, DisposedToken);
+              }
+            }
+          }
+
+          // Now go ahead and receive messages until we are either a) disposed,
+          // or b) receive a signal that subscriptions have been added or
+          // canceled.
+
+          var signalTask = _signalEvent.WaitAsync(DisposedToken);
+          var completedTask = await Task.WhenAny(signalTask, readTask);
+          while (completedTask == readTask)
+          {
+            await readTask;
+
+            // streamName will turn out null when we receive a control message
+            // that is not part of an actual subscription.
+#if DEBUG
+            var json = Encoding.UTF8.GetString(buffer.WrittenSpan);
+#endif
+            var streamName = JsonSerializer.Deserialize<StreamNameDTO>(buffer.WrittenSpan, SerializationOptions.Instance).Stream;
+            if (!string.IsNullOrWhiteSpace(streamName))
+            {
+              // We can still have messages in the receive buffer that belong
+              // to streams we unsubscribed from.
+              if (streams.TryGetValue(streamName, out var stream))
+                await stream.Handle(buffer.WrittenMemory);
+            }
+
+            readTask = ReadMessage(ws, buffer, DisposedToken);
+            completedTask = await Task.WhenAny(signalTask, readTask);
+          }
+
+          await signalTask;
+        }
+      }
+      catch (Exception x)
+      {
+        // Since disposal actually waits for this method to complete, we need to
+        // kickoff disposal in a background task.
+        _ = DisposeAsync(x);
+      }
+      finally
+      {
+        // Cleanup our operations.
+
+        // Important to null this so that new subscription requests are rejected
+        // by returning disposed and completed subscription objects.
+        var newSubscriptions = Interlocked.Exchange(ref _newSubscriptions, null)!;
+
+        // For each new subscription waiting in the queue, we dispose them to
+        // signal they won't be getting any more data.
+        foreach (var subscription in newSubscriptions)
+          await subscription.DisposeAsync();
+
+        // Important to null this before disposing the subscriptions below
+        var removedSubscriptions = Interlocked.Exchange(ref _cancelSubscriptions, null)!;
+
+        // Disposing all the current subscription objects will cause them to
+        // send "completed" signal to the user code via the channel
+        // writer/reader. It will also cause the subscriptions to make calls
+        // into the "RemoveSubscription" method above, but that won't do
+        // anything "bad" because we have already nulled the
+        // "removedSubscriptions" list above.
+        foreach (var kv in streams)
+          await kv.Value.DisposeAsync();
+      }
+
+      static async Task ReadMessage(ClientWebSocket ws, ArrayBufferWriter<byte> buffer, CancellationToken cancellationToken)
+      {
+        buffer.Clear();
+
+        var result = await ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), cancellationToken);
+        buffer.Advance(result.Count);
 
         while (!result.EndOfMessage)
         {
-          result = await ws.ReceiveAsync(writer.GetMemory(BUFFER_SIZE), cancellationToken);
-          writer.Advance(result.Count);
-        }
-
-        // Other kinds of control messages also come through. When they do, the
-        // diff deserializes with missing property values, so we check the
-        // EvenType property to make sure we have a valid diff. Otherwise just
-        // read the next message, hence the while loop.
-        var diff = JsonSerializer.Deserialize<BookUpdate>(writer.WrittenSpan, _serializerOptions)!;
-        if (diff.EventType != "depthUpdate")
-          return diff;
-      }
-    }
-  }
-
-  public partial class BinanceApiClient
-  {
-    private sealed class WebsocketConnection : DisposeBase
-    {
-      private readonly BinanceApiClient _client;
-      private readonly ClientWebSocket _ws;
-      private readonly Channel<string> _newSubscriptions;
-      private readonly Func<object, Task> _messageHandler;
-
-      public WebsocketConnection(BinanceApiClient client, Func<object, Task> messageHandler)
-      {
-        _client = client;
-        _ws = new ClientWebSocket();
-        _newSubscriptions = Channel.CreateBounded<string>(1024);
-        _messageHandler = messageHandler;
-        Task.Run(Work);
-      }
-
-      protected override void CustomDispose()
-      {
-        _ws.Dispose();
-      }
-
-      private async Task Work()
-      {
-        try
-        {
-          await _ws.ConnectAsync(new Uri($"wss://stream.binance.com:9443/stream"), DisposedToken);
-          Task.Run(DoSubscriptions);
-          Task.Run(ReadMessages);
-        }
-        catch (Exception x)
-        {
-          Dispose(x);
+          result = await ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), cancellationToken);
+          buffer.Advance(result.Count);
         }
       }
-
-      async Task DoSubscriptions()
-      {
-        try
-        {
-          var id = 0;
-          while (true)
-          {
-            var subscription = await _newSubscriptions.Reader.ReadAsync(DisposedToken);
-            var message = JsonSerializer.Serialize(new
-            {
-              id = ++id,
-              method = "SUBSCRIBE",
-              @params = new[] { subscription.Name },
-            }).ToUtf8();
-            await _ws.SendAsync(message, WebSocketMessageType.Text, true, DisposedToken);
-          }
-        }
-        catch (Exception x)
-        {
-          Dispose(x);
-        }
-      }
-
-      async Task ReadMessages()
-      {
-        try
-        {
-          const int BUFFER_SIZE = 1024 * 1024;
-          var buffer = new ArrayBufferWriter<byte>(BUFFER_SIZE);
-          while (true)
-          {
-            // At 1000 levels deep, the order book update messages can be fairly long. I didn't spend
-            // long testing, but the first single update I saw was 6kb. I think it
-            // doesn't hurt to have a re-usable 1Mb buffer inside the writer.
-            while (true)
-            {
-              // TODO: Really just need to reset the pointer in the writer. Clearing
-              // it (by resetting all the values in the buffer) is overkill.
-              buffer.Clear();
-
-              var result = await _ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), DisposedToken);
-              buffer.Advance(result.Count);
-
-              while (!result.EndOfMessage)
-              {
-                result = await _ws.ReceiveAsync(buffer.GetMemory(BUFFER_SIZE), DisposedToken);
-                buffer.Advance(result.Count);
-              }
-
-              await _messageHandler(StreamObjectDeserializer.Deserialize(buffer.WrittenSpan));
-
-              // Other kinds of control messages also come through. When they do, the
-              // diff deserializes with missing property values, so we check the
-              // EvenType property to make sure we have a valid diff. Otherwise just
-              // read the next message, hence the while loop.
-              var diff = JsonSerializer.Deserialize<BookUpdate>(buffer.WrittenSpan, _client._serializerOptions)!;
-              if (diff.EventType != "depthUpdate")
-                return diff;
-            }
-          }
-        }
-        catch (Exception x)
-        {
-          Dispose(x);
-        }
-      }
-    }
-
-    private interface ISubscription
-    {
-      string Name { get; }
-    }
-
-    private static class StreamObjectDeserializer
-    {
-      public static object Deserialize(ReadOnlySpan<byte> messageBytes)
-      {
-
-      }
-    }
-
-    private struct StreamEvent
-    {
-      public string StreamName { get; set; }
     }
   }
 }

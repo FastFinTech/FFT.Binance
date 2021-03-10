@@ -3,7 +3,6 @@
 
 namespace FFT.Binance.Tests
 {
-  using System;
   using System.Linq;
   using System.Threading;
   using System.Threading.Tasks;
@@ -31,10 +30,11 @@ namespace FFT.Binance.Tests
     public async Task DepthStream()
     {
       var count = 0;
-      using var cts = new CancellationTokenSource(600000);
-      await foreach (var orderBook in Client.GetDepthStream("BTCUSDT", false, cts.Token))
+      using var cts = new CancellationTokenSource(10000);
+      var subscription = await Client.Subscribe(StreamInfo.FullDepth("BTCUSDT", false));
+      await foreach (var book in subscription.Reader.ReadAllAsync(cts.Token))
       {
-        if (++count == 200000)
+        if (++count == 2)
           return;
       }
     }

@@ -18,6 +18,8 @@ namespace FFT.Binance
   using System.Threading.Tasks;
   using FFT.Binance.Serialization;
   using FFT.Disposables;
+  using FFT.TimeStamps;
+  using Microsoft.AspNetCore.WebUtilities;
   using Nito.AsyncEx;
 
   /// <summary>
@@ -218,6 +220,28 @@ namespace FFT.Binance
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/ticker/price");
       using var response = await _client.SendAsync(request);
       return await ParseResponse<ImmutableList<LastPrice>>(response);
+    }
+
+    /// <summary>
+    /// Get compressed, aggregate trades. Trades that fill at the time, from the
+    /// same taker order, with the same price will have the quantity aggregated.
+    /// </summary>
+    public async Task<ImmutableList<AggregateTrade>> GetAggregateTrades(string symbol, TimeStamp from, TimeStamp until)
+    {
+      symbol.EnsureNotNullOrWhiteSpace(nameof(symbol));
+      from.EnsureIs(nameof(from), "must be an exact millisecond.", f => f == f.ToMillisecondFloor());
+      until.EnsureIs(nameof(until), "must be an exact millisecond.", f => f == f.ToMillisecondFloor());
+      until.Subtract(from).EnsureIs("time difference", "must be less than one hour.", t => t.TotalHours < 1);
+      var query = new Dictionary<string, string>
+      {
+        { "symbol", symbol },
+        { "startTime", from.ToUnixMillieconds().ToString() },
+        { "endTime", until.ToUnixMillieconds().ToString() },
+      };
+      var url = QueryHelpers.AddQueryString("api/v3/aggTrades", query);
+      using var request = new HttpRequestMessage(HttpMethod.Get, url);
+      using var response = await _client.SendAsync(request);
+      return await ParseResponse<ImmutableList<AggregateTrade>>(response);
     }
   }
 

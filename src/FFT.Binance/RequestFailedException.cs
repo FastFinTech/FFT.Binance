@@ -37,6 +37,10 @@ namespace FFT.Binance
       if (response.IsSuccessStatusCode)
         return;
 
+#if DEBUG
+      var content = await response.Content.ReadAsStringAsync();
+      Debugger.Break();
+#endif
       RequestFailedException exception;
       try
       {

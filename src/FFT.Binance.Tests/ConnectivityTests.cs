@@ -6,6 +6,7 @@ namespace FFT.Binance.Tests
   using System.Linq;
   using System.Threading;
   using System.Threading.Tasks;
+  using FFT.TimeStamps;
   using Microsoft.VisualStudio.TestTools.UnitTesting;
   using static System.Math;
   using static System.MidpointRounding;
@@ -24,6 +25,16 @@ namespace FFT.Binance.Tests
       var btcUSDOrderBook = orderBooks.Single(b => b.Symbol == "BTCUSDT");
       var btcBidDollars = Round(btcUSDOrderBook.BidQty * btcUSDOrderBook.BidPrice, 2, AwayFromZero);
       var btcAskDollars = Round(btcUSDOrderBook.AskQty * btcUSDOrderBook.AskPrice, 2, AwayFromZero);
+
+      var until = TimeStamp.Now.ToHourFloor();
+      var from = until.AddHours(-1);
+      until = until.AddMilliseconds(-1);
+      //var tradeHistory = await Client.GetAggregateTrades("BTCUSDT", from, until);
+
+      until = TimeStamp.Now.AddDays(-365.25 * 4).ToHourFloor();
+      from = until.AddHours(-1);
+      until = until.AddMilliseconds(-1);
+     var  tradeHistory = await Client.GetAggregateTrades("BTCUSDT", from, until);
     }
 
     [TestMethod]

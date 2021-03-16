@@ -34,7 +34,7 @@ namespace FFT.Binance.Tests
       until = TimeStamp.Now.AddDays(-365.25 * 4).ToHourFloor();
       from = until.AddHours(-1);
       until = until.AddMilliseconds(-1);
-     var  tradeHistory = await Client.GetAggregateTrades("BTCUSDT", from, until);
+      var tradeHistory = await Client.GetAggregateTrades("BTCUSDT", from, until);
     }
 
     [TestMethod]

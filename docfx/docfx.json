@@ -5,7 +5,7 @@
         {
           "src": "../src",
           "files": [ "**.csproj" ],
-          "exclude": [ "**/FFT.Oanda.Tests/**/*" ]
+          "exclude": [ "**/FFT.Binance.Tests/**/*" ]
         }
       ],
       "dest": "api",

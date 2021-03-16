@@ -21,5 +21,4 @@ which you reuse throughout your application. It is threadsafe.
 // TODO: basic code sample;
 ```
 
-[See complete documentation including the list of `BinanceApiClient` methods
-here. TODO: Insert link]()
+[See complete documentation including the list of `BinanceApiClient` methods.](https://fastfintech.github.io/FFT.Binance/api/FFT.Binance.BinanceApiClient.html)

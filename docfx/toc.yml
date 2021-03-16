@@ -1,4 +1,4 @@
 - name: Reference
-  topicUid: FFT.Oanda.OandaApiClient
+  topicUid: FFT.Binance.BinanceApiClient
 - name: Github
-  href: https://github.com/FastFinTech/FFT.Oanda
+  href: https://github.com/FastFinTech/FFT.Binance

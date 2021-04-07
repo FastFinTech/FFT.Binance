@@ -26,6 +26,7 @@ namespace FFT.Binance
         "!miniTicker@arr" => StreamType.MiniTickerAllMarkets,
         "!ticker@arr" => StreamType.TickerAllMarkets,
         "!bookTicker" => StreamType.BookTickerAllMarkets,
+        var a when a.EndsWith("@aggTrade") => StreamType.AggregatedTrade,
         var a when a.EndsWith("@trade") => StreamType.RawTrade,
         var a when a.EndsWith("@miniTicker") => StreamType.MiniTicker,
         var a when a.EndsWith("@ticker") => StreamType.Ticker,

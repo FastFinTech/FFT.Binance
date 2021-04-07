@@ -108,6 +108,9 @@ namespace FFT.Binance
               _buffer.Advance(result.Count);
             }
 
+#if DEBUG
+            var json = Encoding.UTF8.GetString(_buffer.WrittenSpan);
+#endif
             var streamId = JsonSerializer.Deserialize<StreamNameDTO>(_buffer.WrittenSpan, SerializationOptions.Instance).Stream;
             if (!string.IsNullOrWhiteSpace(streamId))
             {
@@ -116,6 +119,13 @@ namespace FFT.Binance
           }
         },
       });
+      _subscriptionManager.DisposedTask.ContinueWith(
+        t =>
+        {
+          var exception = new Exception("Subscription manager encountered an error. See inner exception for details.", _subscriptionManager.DisposalReason);
+          _ = DisposeAsync(exception);
+        },
+        DisposedToken).Ignore();
     }
 
     public BinanceApiClient? ApiClient { get; set; }

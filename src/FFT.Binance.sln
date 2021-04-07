@@ -16,9 +16,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".sln", ".sln", "{62BFF640-C
 		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFT.Binance", "FFT.Binance\FFT.Binance.csproj", "{06A4B6A8-2BDE-45D2-A814-74176DB45D72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FFT.Binance", "FFT.Binance\FFT.Binance.csproj", "{06A4B6A8-2BDE-45D2-A814-74176DB45D72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFT.Binance.Tests", "FFT.Binance.Tests\FFT.Binance.Tests.csproj", "{E51FF55E-5042-4AF6-8F65-83E34125D098}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FFT.Binance.Tests", "FFT.Binance.Tests\FFT.Binance.Tests.csproj", "{E51FF55E-5042-4AF6-8F65-83E34125D098}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFT.Binance.BinanceTickProviders", "FFT.Binance.BinanceTickProviders\FFT.Binance.BinanceTickProviders.csproj", "{F59B0A70-EDBA-43F9-8629-AD8371E02531}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +36,10 @@ Global
 		{E51FF55E-5042-4AF6-8F65-83E34125D098}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E51FF55E-5042-4AF6-8F65-83E34125D098}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E51FF55E-5042-4AF6-8F65-83E34125D098}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F59B0A70-EDBA-43F9-8629-AD8371E02531}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F59B0A70-EDBA-43F9-8629-AD8371E02531}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F59B0A70-EDBA-43F9-8629-AD8371E02531}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F59B0A70-EDBA-43F9-8629-AD8371E02531}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

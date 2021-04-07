@@ -38,4 +38,11 @@ namespace FFT.Binance
       [JsonPropertyName("M")]
       public bool IsTradeBestPriceMatch { get; init; }
     }
+
+  /*
+  "e": "aggTrade",  // Event type
+  "E": 123456789,   // Event time
+  "s": "BNBBTC",    // Symbol
+   * */
+
 }

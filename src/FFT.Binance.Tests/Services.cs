@@ -16,10 +16,13 @@ namespace FFT.Binance.Tests
       };
 
       Client = new BinanceApiClient(BinanceApiClientOptions);
+      StreamingClient = new BinanceApiStreamingClient { ApiClient = Client };
     }
 
     public static BinanceApiClientOptions BinanceApiClientOptions { get; }
 
     public static BinanceApiClient Client { get; }
+
+    public static BinanceApiStreamingClient StreamingClient { get; }
   }
 }

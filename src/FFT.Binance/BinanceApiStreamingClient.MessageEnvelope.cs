@@ -3,8 +3,10 @@
 
 namespace FFT.Binance
 {
-  public sealed partial class BinanceApiClient
+  public sealed partial class BinanceApiStreamingClient
   {
+    // Keep member names unchanged so you don't mess up serialization, or use
+    // member serialization name attributes.
     private struct MessageEnvelope<T>
     {
       public string Stream { get; set; }

@@ -42,7 +42,7 @@ namespace FFT.Binance.Tests
     {
       var count = 0;
       using var cts = new CancellationTokenSource(10000);
-      var subscription = await Client.Subscribe(StreamInfo.FullDepth("BTCUSDT", false));
+      var subscription = await StreamingClient.Subscribe(StreamInfo.FullDepth("BTCUSDT", false));
       await foreach (var book in subscription.Reader.ReadAllAsync(cts.Token))
       {
         if (++count == 2)

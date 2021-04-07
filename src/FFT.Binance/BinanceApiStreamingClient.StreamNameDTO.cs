@@ -3,10 +3,12 @@
 
 namespace FFT.Binance
 {
-  public sealed partial class BinanceApiClient
+  public sealed partial class BinanceApiStreamingClient
   {
     /// <summary>
-    /// Used to extract the stream name from incoming messages.
+    /// Used to extract the stream name from incoming messages. Keep the member
+    /// names unchanged (or use serialization property name attributes) so you
+    /// don't screw up deserialization.
     /// </summary>
     private struct StreamNameDTO
     {

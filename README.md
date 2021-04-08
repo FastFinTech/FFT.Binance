@@ -3,6 +3,8 @@
 [![Source code](https://img.shields.io/static/v1?style=flat&label=&message=Source%20Code&logo=read-the-docs&color=informational)](https://github.com/FastFinTech/FFT.Binance)
 [![NuGet
 package](https://img.shields.io/nuget/v/FFT.Binance.svg)](https://nuget.org/packages/FFT.Binance)
+[![NuGet
+package](https://img.shields.io/nuget/v/FFT.Binance.svg)](https://nuget.org/packages/FFT.Binance.TickProviders)
 [![Full documentation](https://img.shields.io/static/v1?style=flat&label=&message=Documentation&logo=read-the-docs&color=green)](https://fastfintech.github.io/FFT.Binance/)
 
 `FFT.Binance` is a .Net client for the [Binance

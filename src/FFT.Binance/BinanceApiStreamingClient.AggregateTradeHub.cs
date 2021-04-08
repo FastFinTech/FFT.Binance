@@ -4,6 +4,7 @@
 namespace FFT.Binance
 {
   using System;
+  using System.Text;
   using System.Text.Json;
   using FFT.Binance.Serialization;
 
@@ -12,7 +13,17 @@ namespace FFT.Binance
     private sealed class AggregateTradeHub : BroadcastHubBase
     {
       protected override object Convert(ReadOnlyMemory<byte> message)
-        => JsonSerializer.Deserialize<MessageEnvelope<AggregateTrade>>(message.Span, SerializationOptions.Instance).Data!;
+      {
+        var json = Encoding.UTF8.GetString(message.Span);
+        try
+        {
+          return JsonSerializer.Deserialize<MessageEnvelope<AggregateTrade>>(message.Span, SerializationOptions.Instance).Data!;
+        }
+        catch (Exception x)
+        {
+          throw;
+        }
+      }
     }
   }
 }

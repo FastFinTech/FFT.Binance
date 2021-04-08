@@ -39,12 +39,13 @@ namespace FFT.Binance.Tests
       var store = new HourProviderStore(fileManager);
       var from = TimeStamp.Now.AddHours(-10).ToHourFloor();
       var until = from.AddHours(1);
-      using var hourProvider = store.GetCreate(new TickProviderInfo
+      var hourProvider = store.GetCreate(new TickProviderInfo
       {
         From = from,
         Until = until,
         Instrument = _bitcoin,
       });
+      using var usageToken = hourProvider.GetUserCountToken();
       await hourProvider.WaitForReadyAsync(default);
       var reader = hourProvider.CreateReader();
       var count = 0;
@@ -80,6 +81,7 @@ namespace FFT.Binance.Tests
         Until = null,
         Instrument = _bitcoin,
       });
+      using var usageToken = provider.GetUserCountToken();
       await provider.WaitForReadyAsync(timeout.Token);
       var reader = provider.CreateReader();
       var count = 0;

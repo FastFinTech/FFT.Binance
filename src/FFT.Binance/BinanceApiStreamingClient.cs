@@ -6,6 +6,7 @@ namespace FFT.Binance
   using System;
   using System.Buffers;
   using System.Collections.Immutable;
+  using System.Diagnostics;
   using System.Globalization;
   using System.Linq;
   using System.Net.Http;
@@ -99,22 +100,35 @@ namespace FFT.Binance
           while (true)
           {
             _buffer.Clear();
+receive:
             var result = await _ws.ReceiveAsync(_buffer.GetMemory(BUFFER_SIZE), linked.Token);
             _buffer.Advance(result.Count);
-
-            while (!result.EndOfMessage)
-            {
-              result = await _ws.ReceiveAsync(_buffer.GetMemory(BUFFER_SIZE), linked.Token);
-              _buffer.Advance(result.Count);
-            }
+            if (!result.EndOfMessage) goto receive;
 
 #if DEBUG
             var json = Encoding.UTF8.GetString(_buffer.WrittenSpan);
+            Trace.WriteLine(json);
 #endif
-            var streamId = JsonSerializer.Deserialize<StreamNameDTO>(_buffer.WrittenSpan, SerializationOptions.Instance).Stream;
-            if (!string.IsNullOrWhiteSpace(streamId))
+            try
             {
-              return (streamId, _buffer.WrittenMemory);
+              string streamId = null;
+              try
+              {
+                streamId = JsonSerializer.Deserialize<StreamNameDTO>(_buffer.WrittenSpan, SerializationOptions.Instance).Stream;
+              }
+              catch (Exception x)
+              {
+                int i = 0;
+              }
+
+              if (!string.IsNullOrWhiteSpace(streamId))
+              {
+                return (streamId, _buffer.WrittenMemory);
+              }
+            }
+            catch (Exception x)
+            {
+              int i = 0;
             }
           }
         },

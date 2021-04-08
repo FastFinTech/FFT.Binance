@@ -13,26 +13,26 @@ namespace FFT.Binance
   {
     private abstract class BroadcastHubBase : IBroadcastHub
     {
-      protected readonly List<IWritable> _subscribers = new();
+      public int SubscriberCount => Subscribers.Count;
 
-      public int SubscriberCount => _subscribers.Count;
+      protected List<IWritable> Subscribers { get; } = new();
 
       public void AddSubscriber(IWritable subscriber)
-        => _subscribers.Add(subscriber);
+        => Subscribers.Add(subscriber);
 
       public void RemoveSubscriber(IWritable subscriber)
-        => _subscribers.Remove(subscriber);
+        => Subscribers.Remove(subscriber);
 
       public void Complete()
       {
-        foreach (var subscriber in _subscribers)
+        foreach (var subscriber in Subscribers)
           subscriber.Complete();
       }
 
       public virtual void Handle(object message)
       {
         message = Convert((ReadOnlyMemory<byte>)message);
-        foreach (var subscriber in _subscribers)
+        foreach (var subscriber in Subscribers)
           subscriber.Write(message);
       }
 

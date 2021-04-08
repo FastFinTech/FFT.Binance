@@ -27,7 +27,7 @@ namespace FFT.Binance
         if (diff.UpdateIdTo > _book.LastUpdateId)
         {
           _book = _book.ApplyDiff(ref diff);
-          foreach (var subscriber in _subscribers)
+          foreach (var subscriber in Subscribers)
             subscriber.Write(_book);
         }
       }

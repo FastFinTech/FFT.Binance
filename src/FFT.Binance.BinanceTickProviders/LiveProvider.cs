@@ -31,6 +31,8 @@ namespace FFT.Binance.BinanceTickProviders
 
     public TickProviderInfo Info { get; }
 
+    public long FirstTickId { get; private set; }
+
     public override IEnumerable<object> GetDependencies()
     {
       yield break;
@@ -54,7 +56,13 @@ namespace FFT.Binance.BinanceTickProviders
           var streamingClient = ClientProvider.GetStreamingClient();
           using var subscription = await streamingClient.Subscribe(StreamInfo.AggregatedTrade(Info.Instrument.Name));
           var firstLiveTrade = (AggregateTrade)await subscription.Reader.ReadAsync(DisposedToken);
+
           var historicalTrades = await streamingClient.ApiClient!.GetAggregateTrades(Info.Instrument.Name, Info.From, firstLiveTrade.Timestamp);
+          if (historicalTrades.Count > 0)
+          {
+            FirstTickId = historicalTrades[0].AggregateTradeId;
+          }
+
           foreach(var trade in historicalTrades)
           {
             if (trade.AggregateTradeId >= firstLiveTrade.AggregateTradeId)

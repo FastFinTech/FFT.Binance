@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="ConfigureAwait.Fody" Version="3.3.1" PrivateAssets="All" />
     <PackageReference Include="FFT.Disposables" Version="0.0.6" />
-    <PackageReference Include="FFT.Subscriptions" Version="0.0.2" />
+    <PackageReference Include="FFT.Subscriptions" Version="0.0.3" />
     <PackageReference Include="FFT.TimeStamps" Version="0.0.19" />
     <PackageReference Include="Fody" Version="6.5.1">
       <PrivateAssets>all</PrivateAssets>
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.190">
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.194">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

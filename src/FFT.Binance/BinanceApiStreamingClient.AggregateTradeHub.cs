@@ -14,15 +14,7 @@ namespace FFT.Binance
     {
       protected override object Convert(ReadOnlyMemory<byte> message)
       {
-        var json = Encoding.UTF8.GetString(message.Span);
-        try
-        {
-          return JsonSerializer.Deserialize<MessageEnvelope<AggregateTrade>>(message.Span, SerializationOptions.Instance).Data!;
-        }
-        catch (Exception x)
-        {
-          throw;
-        }
+        return JsonSerializer.Deserialize<MessageEnvelope<AggregateTrade>>(message.Span, SerializationOptions.Instance).Data!;
       }
     }
   }

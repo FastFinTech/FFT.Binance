@@ -11,7 +11,6 @@ env:
   # Official NuGet Feed settings
   NUGET_FEED: https://api.nuget.org/v3/index.json
   NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-  GH_PAT: ${{ secrets.GH_PAT }}
 
 jobs:
   build:
@@ -52,4 +51,4 @@ jobs:
         uses: maxheld83/ghpages@master
         env:
           BUILD_DIR: docfx/_site
-          GH_PAT: $GH_PAT
+          GH_PAT: ${{ secrets.GH_PAT }}

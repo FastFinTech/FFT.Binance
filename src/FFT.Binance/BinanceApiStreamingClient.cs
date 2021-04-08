@@ -107,28 +107,11 @@ receive:
 
 #if DEBUG
             var json = Encoding.UTF8.GetString(_buffer.WrittenSpan);
-            Trace.WriteLine(json);
 #endif
-            try
+            var streamId = JsonSerializer.Deserialize<StreamNameDTO>(_buffer.WrittenSpan, SerializationOptions.Instance).Stream;
+            if (!string.IsNullOrWhiteSpace(streamId))
             {
-              string streamId = null;
-              try
-              {
-                streamId = JsonSerializer.Deserialize<StreamNameDTO>(_buffer.WrittenSpan, SerializationOptions.Instance).Stream;
-              }
-              catch (Exception x)
-              {
-                int i = 0;
-              }
-
-              if (!string.IsNullOrWhiteSpace(streamId))
-              {
-                return (streamId, _buffer.WrittenMemory);
-              }
-            }
-            catch (Exception x)
-            {
-              int i = 0;
+              return (streamId, _buffer.WrittenMemory);
             }
           }
         },

@@ -4,7 +4,7 @@
     <TargetFramework>net5</TargetFramework>
     <IsPackable>true</IsPackable>
 
-    <PackageId>FFT.Binance.TickProviders</PackageId>
+    <PackageId>FFT.Binance.BinanceTickProviders</PackageId>
     <Summary>Binance tick data providers for use with FFT.Market</Summary>
     <Description>$(Summary)</Description>
     <Company>True Goodwill</Company>

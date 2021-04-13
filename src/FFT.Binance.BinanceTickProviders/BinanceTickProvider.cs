@@ -72,7 +72,7 @@ namespace FFT.Binance.BinanceTickProviders
         // old)
         while (_providers.Count > 0)
         {
-          var hourProvider = _providers[_providers.Count - 1];
+          var hourProvider = _providers[^1];
           if (hourProvider.Info.Until <= liveProvider.Info.From)
             break;
           // Bump the usage token so it knows it can shutdown if nobody else is using it.

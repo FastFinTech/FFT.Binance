@@ -64,7 +64,7 @@ namespace FFT.Binance.BinanceTickProviders
           {
             _tickStream = new ShortTickStream(Info.Instrument, sequence);
             var isFirstTick = true;
-            var tickSizeAsDecimal = (decimal)Info.Instrument.TickSize;
+            var tickSizeAsDecimal = (decimal)Info.Instrument.MinPriceIncrement;
             var client = ClientProvider.GetClient();
             foreach (var trade in await client.GetAggregateTrades(Info.Instrument.Name, Info.From, Info.Until!.Value))
             {

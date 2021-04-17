@@ -52,7 +52,7 @@ namespace FFT.Binance.BinanceTickProviders
       {
         try
         {
-          var tickSizeAsDecimal = (decimal)Info.Instrument.TickSize;
+          var tickSizeAsDecimal = (decimal)Info.Instrument.MinPriceIncrement;
           var streamingClient = ClientProvider.GetStreamingClient();
           using var subscription = await streamingClient.Subscribe(StreamInfo.AggregatedTrade(Info.Instrument.Name));
           var firstLiveTrade = (AggregateTrade)await subscription.Reader.ReadAsync(DisposedToken);

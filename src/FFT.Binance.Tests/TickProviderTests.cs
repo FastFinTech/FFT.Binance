@@ -25,11 +25,12 @@ namespace FFT.Binance.Tests
     private static readonly IInstrument _bitcoin = new Instrument
     {
       Name = "BTCUSDT",
-      BaseAsset = Asset.BitCoin,
-      QuoteAsset = new Asset(AssetType.Currency, "USD"),
-      Exchange = new Exchange { ShortName = "Binance", LongName = "Binance" },
-      TickSize = 0.00000001,
-      SettlementTime = new SettlementTime { TimeZone = TimeZones.America_New_York, TimeOfDay = TimeSpan.FromHours(16) },
+      BaseAsset = KnownAssets.Crypto_Bitcoin,
+      QuoteAsset = KnownAssets.Crypto_Tether,
+      Exchange = KnownExchanges.Binance,
+      MinPriceIncrement = 0.01,
+      MinQtyIncrement = 0.00000001,
+      SettlementTime = new SettlementTime { TimeZone = TimeZones.UTC, TimeOfDay = TimeSpan.Zero },
     };
 
     [TestMethod]
@@ -97,7 +98,8 @@ namespace FFT.Binance.Tests
     public Asset QuoteAsset { get; init; }
     public Exchange Exchange { get; init; }
     public SettlementTime SettlementTime { get; init; }
-    public double TickSize { get; init; }
+    public double MinPriceIncrement { get; init; }
+    public double MinQtyIncrement { get; init; }
 
     public bool IsTradingDay(DateStamp date) => true;
 

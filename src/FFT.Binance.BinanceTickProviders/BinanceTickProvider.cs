@@ -5,31 +5,22 @@ namespace FFT.Binance.BinanceTickProviders
 {
   using System;
   using System.Buffers;
-  using System.Collections.Concurrent;
   using System.Collections.Generic;
   using System.Collections.Immutable;
   using System.Linq;
-  using System.Runtime.ExceptionServices;
-  using System.Threading;
   using System.Threading.Tasks;
-  using FFT.Disposables;
-  using FFT.FileManagement;
   using FFT.Market;
-  using FFT.Market.Instruments;
   using FFT.Market.Providers;
   using FFT.Market.Providers.Ticks;
-  using FFT.Market.Services;
-  using FFT.Market.Sessions.TradingHoursSessions;
   using FFT.Market.TickStreams;
   using FFT.TimeStamps;
-  using Nerdbank.Streams;
   using Nito.AsyncEx;
   using Nito.Disposables;
 
   internal sealed class BinanceTickProvider : ProviderBase, ITickProvider
   {
     private readonly IDisposable _disposables;
-    private readonly List<ITickProvider> _providers = new();
+    private readonly IReadOnlyList<ITickProvider> _providers;
 
     internal BinanceTickProvider(TickProviderInfo info, HourProviderStore hourProviderStore)
     {
@@ -50,6 +41,7 @@ namespace FFT.Binance.BinanceTickProviders
       if (info.Until < info.From)
         throw new ArgumentException("from is greater than until.");
 
+      var providers = new List<ITickProvider>();
       var from = info.From.ToHourFloor();
       while (from < startOfCurrentHour && !(from >= info.Until))
       {
@@ -59,7 +51,7 @@ namespace FFT.Binance.BinanceTickProviders
           From = from,
           Until = from.AddHours(1),
         });
-        _providers.Add(hourProvider);
+        providers.Add(hourProvider);
         from = from.AddHours(1);
       }
 
@@ -70,21 +62,23 @@ namespace FFT.Binance.BinanceTickProviders
         // Remove any hour providers that have data beyond the start of the live
         // provider. (This can happen when the liveProvider is more than an hour
         // old)
-        while (_providers.Count > 0)
+        while (providers.Count > 0)
         {
-          var hourProvider = _providers[^1];
+          var hourProvider = providers[^1];
           if (hourProvider.Info.Until <= liveProvider.Info.From)
             break;
           // Bump the usage token so it knows it can shutdown if nobody else is using it.
           hourProvider.GetUserCountToken().Dispose();
-          _providers.RemoveAt(_providers.Count - 1);
+          providers.RemoveAt(providers.Count - 1);
         }
 
-        _providers.Add(liveProvider);
+        providers.Add(liveProvider);
       }
 
+      _providers = providers;
+
       // Reserve the internal providers.
-      _disposables = CollectionDisposable.Create(_providers.Select(p => p.GetUserCountToken()));
+      _disposables = CollectionDisposable.Create(providers.Select(p => p.GetUserCountToken()));
     }
 
     public TickProviderInfo Info { get; }
@@ -148,7 +142,20 @@ namespace FFT.Binance.BinanceTickProviders
 
     public override ProviderStatus GetStatus()
     {
-      throw new NotImplementedException();
+      return new ProviderStatus
+      {
+        ProviderName = Name,
+
+        StatusMessage = State switch
+        {
+          ProviderStates.Loading => $"Loading {_providers.Where(p => p.State == ProviderStates.Ready).Count()} of {_providers.Count} completed.",
+          ProviderStates.Ready => "Ready",
+          ProviderStates.Error => "Error: " + DisposalReason!.GetUnwoundMessage(),
+          _ => throw State.UnknownValueException(),
+        },
+
+        InternalProviders = ImmutableList<ProviderStatus>.Empty,
+      };
     }
 
     protected override void OnDisposed()

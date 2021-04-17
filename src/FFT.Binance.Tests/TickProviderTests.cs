@@ -73,8 +73,7 @@ namespace FFT.Binance.Tests
     public async Task TickProvider()
     {
       using var timeout = new CancellationTokenSource(3000000);
-      var fileManager = FileManager.Create("data");
-      var store = new BinanceTickProviderStore(fileManager);
+      var store = new BinanceTickProviderStore(new("data"));
       using var provider = store.GetCreate(new TickProviderInfo
       {
         From = TimeStamp.Now.AddDays(-1),

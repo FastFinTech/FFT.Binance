@@ -23,5 +23,11 @@ namespace FFT.Binance
     /// cref="EndpointSecurityType.USER_DATA"/>.
     /// </summary>
     public string SecretKey { get; init; }
+
+    /// <summary>
+    /// This value sets the maximum number of simultaneous requests that may be
+    /// made to the rest api. Default is 2.
+    /// </summary>
+    public int MaxSimultaneousRequests { get; init; } = 2;
   }
 }

@@ -40,6 +40,8 @@ namespace FFT.Binance
     /// </summary>
     private readonly HttpClient _client;
 
+    public readonly AsyncSemaphore _simultaneousRequests;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BinanceApiClient"/>
     /// class and triggers immediate connection to the streaming websocket.
@@ -47,7 +49,7 @@ namespace FFT.Binance
     /// <param name="options">Configures the client, particularly for
     /// authentication. Can be left <c>null</c> if you are only accessing
     /// functions that do not require authentication.</param>
-    public BinanceApiClient(BinanceApiClientOptions? options)
+    public BinanceApiClient(BinanceApiClientOptions options)
     {
       // This allows connection-reuse for multiple rest api calls. It requires
       // targeting net5 as discussed here:
@@ -55,11 +57,10 @@ namespace FFT.Binance
       _client = new(new SocketsHttpHandler());
       _client.BaseAddress = new("https://api.binance.com");
 
-      if (options is not null)
-      {
-        Options = options;
+      Options = options;
+      _simultaneousRequests = new AsyncSemaphore(options.MaxSimultaneousRequests);
+      if (!string.IsNullOrWhiteSpace(options.ApiKey))
         _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", Options.ApiKey);
-      }
     }
 
     /// <inheritdoc/>
@@ -94,24 +95,26 @@ namespace FFT.Binance
     /// <summary>
     /// This method completes successfully if a connection ping test succeeded.
     /// </summary>
-    public async Task TestConnectivity()
+    public async Task TestConnectivity(CancellationToken cancellationToken = default)
     {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
       using var request = new HttpRequestMessage(HttpMethod.Get, "api/v3/ping");
-      using var response = await _client.SendAsync(request);
+      using var response = await _client.SendAsync(request, linked.Token);
       await RequestFailedException.ThrowIfNecessary(response);
     }
 
     /// <summary>
     /// Gets the current time on the Binance api server.
     /// </summary>
-    public async Task<ServerTimeResponse> GetServerTime()
+    public async Task<ServerTimeResponse> GetServerTime(CancellationToken cancellationToken = default)
     {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
       using var request = new HttpRequestMessage(HttpMethod.Get, "api/v3/time");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<ServerTimeResponse>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ServerTimeResponse>(response, linked.Token);
     }
 
-    private async Task<T> ParseResponse<T>(HttpResponseMessage response)
+    private async Task<T> ParseResponse<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
       if (response.Headers.TryGetValues("X-MBX-USED-WEIGHT", out var usedWeightResponse))
         UsedWeight = int.Parse(usedWeightResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -126,18 +129,27 @@ namespace FFT.Binance
       // TODO: Parse and store the
       // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
 
-      return (await response.Content.ReadFromJsonAsync<T>(SerializationOptions.Instance, DisposedToken))!;
+      return (await response.Content.ReadFromJsonAsync<T>(SerializationOptions.Instance, cancellationToken))!;
     }
   }
 
   // Market data (rest api)
   public partial class BinanceApiClient
   {
+    public async Task<ExchangeInfoResponse> GetExchangeInformation(CancellationToken cancellationToken = default)
+    {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
+      using var request = new HttpRequestMessage(HttpMethod.Get, "api/v3/exchangeInfo");
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ExchangeInfoResponse>(response, linked.Token);
+    }
+
     /// <summary>
     /// Gets the current order book for the given <paramref name="symbol"/> to a
     /// maximum depth of <paramref name="limit"/> values.
     /// </summary>
-    public async Task<OrderBookResponse> GetOrderBook(string symbol, int limit = 100)
+    public async Task<OrderBookResponse> GetOrderBook(string symbol, int limit = 100, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrWhiteSpace(symbol))
         throw new ArgumentException(nameof(symbol));
@@ -145,32 +157,38 @@ namespace FFT.Binance
       if (!_orderBookDepthLimits.Contains(limit))
         throw new ArgumentException(nameof(limit));
 
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/depth?symbol={symbol.ToUpperInvariant()}&limit={limit}");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<OrderBookResponse>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<OrderBookResponse>(response, linked.Token);
     }
 
     /// <summary>
     /// Get the top order book for the given <paramref name="symbol"/>.
     /// </summary>
-    public async Task<TopOrderBook> GetTopOrderBook(string symbol)
+    public async Task<TopOrderBook> GetTopOrderBook(string symbol, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrWhiteSpace(symbol))
         throw new ArgumentException(nameof(symbol));
 
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/ticker/bookTicker?symbol={symbol}");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<TopOrderBook>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<TopOrderBook>(response, linked.Token);
     }
 
     /// <summary>
     /// Get the top order book for all instruments.
     /// </summary>
-    public async Task<ImmutableList<TopOrderBook>> GetTopOrderBooks()
+    public async Task<ImmutableList<TopOrderBook>> GetTopOrderBooks(CancellationToken cancellationToken = default)
     {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/ticker/bookTicker");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<ImmutableList<TopOrderBook>>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ImmutableList<TopOrderBook>>(response, linked.Token);
     }
 
     /// <summary>
@@ -178,7 +196,7 @@ namespace FFT.Binance
     /// to maximum <paramref name="limit"/> number of values. Values are
     /// returned in ascending chronological order.
     /// </summary>
-    public async Task<ImmutableList<HistoricalTrade>> GetTrades(string symbol, int limit = 500)
+    public async Task<ImmutableList<HistoricalTrade>> GetTrades(string symbol, int limit = 500, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrWhiteSpace(symbol))
         throw new ArgumentException(nameof(symbol));
@@ -186,44 +204,50 @@ namespace FFT.Binance
       if (limit < 1 || limit > 1000)
         throw new ArgumentException(nameof(limit));
 
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/trades?symbol={symbol}&limit={limit}");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<ImmutableList<HistoricalTrade>>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ImmutableList<HistoricalTrade>>(response, linked.Token);
     }
 
     /// <summary>
     /// Get the last trade price for the given <paramref name="symbol"/>.
     /// </summary>
-    public async Task<LastPrice> GetLastPrice(string symbol)
+    public async Task<LastPrice> GetLastPrice(string symbol, CancellationToken cancellationToken = default)
     {
       if (string.IsNullOrWhiteSpace(symbol))
         throw new ArgumentException(nameof(symbol));
 
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/ticker/price?symbol={symbol}");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<LastPrice>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<LastPrice>(response, linked.Token);
     }
 
     /// <summary>
     /// Get the last traded price for all instruments on the exchange.
     /// </summary>
-    public async Task<ImmutableList<LastPrice>> GetLastPrices()
+    public async Task<ImmutableList<LastPrice>> GetLastPrices(CancellationToken cancellationToken = default)
     {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, $"api/v3/ticker/price");
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<ImmutableList<LastPrice>>(response);
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ImmutableList<LastPrice>>(response, linked.Token);
     }
 
     /// <summary>
     /// Get compressed, aggregate trades. Trades that fill at the time, from the
     /// same taker order, with the same price will have the quantity aggregated.
     /// </summary>
-    public async Task<ImmutableList<AggregateTrade>> GetAggregateTrades(string symbol, TimeStamp from, TimeStamp until)
+    public async Task<ImmutableList<AggregateTrade>> GetAggregateTrades(string symbol, TimeStamp from, TimeStamp until, CancellationToken cancellationToken = default)
     {
       symbol.EnsureNotNullOrWhiteSpace(nameof(symbol));
       from.EnsureIs(nameof(from), "must be an exact millisecond.", f => f == f.ToMillisecondFloor());
       until.EnsureIs(nameof(until), "must be an exact millisecond.", f => f == f.ToMillisecondFloor());
-      until.Subtract(from).EnsureIs("time difference", "must be less than one hour.", t => t.TotalHours <= 1);
+      until.Subtract(from).EnsureIs("time difference", "must be less than or equal to one hour.", t => t.TotalHours <= 1);
       var query = new Dictionary<string, string>
       {
         { "symbol", symbol },
@@ -231,20 +255,11 @@ namespace FFT.Binance
         { "endTime", until.ToUnixMillieconds().ToString() },
       };
       var url = QueryHelpers.AddQueryString("api/v3/aggTrades", query);
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, url);
-      using var response = await _client.SendAsync(request);
-      return await ParseResponse<ImmutableList<AggregateTrade>>(response);
-    }
-
-    public async IAsyncEnumerable<ImmutableList<AggregateTrade>> GetAggregateTradesForMoreThanOneHour(string symbol, TimeStamp from, TimeStamp until)
-    {
-      var time = from;
-      while (time < until)
-      {
-        var thisUntil = TimeStamp.Min(until, time.AddHours(1));
-        yield return await GetAggregateTrades(symbol, time, thisUntil);
-        time = time.AddHours(1);
-      }
+      using var response = await _client.SendAsync(request, linked.Token);
+      return await ParseResponse<ImmutableList<AggregateTrade>>(response, linked.Token);
     }
   }
 }

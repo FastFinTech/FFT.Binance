@@ -49,5 +49,11 @@ namespace FFT.Binance.Tests
           return;
       }
     }
+
+    [TestMethod]
+    public async Task ExchangeInfo()
+    {
+      var exchangeInfo = await Client.GetExchangeInformation();
+    }
   }
 }

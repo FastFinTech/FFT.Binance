@@ -15,13 +15,11 @@ namespace FFT.Binance.BinanceTickProviders
 
     private static BinanceApiStreamingClient? _streamingClient;
 
-    public static SemaphoreSlim Semaphore { get; } = new(2, 2);
-
     public static BinanceApiClient GetClient()
     {
       var client = Interlocked.CompareExchange(ref _client, null, null);
       if (client is not null) return client;
-      client = new BinanceApiClient(null);
+      client = new BinanceApiClient(new());
       var swapResult = Interlocked.CompareExchange(ref _client, client, null);
       if (swapResult is null)
       {

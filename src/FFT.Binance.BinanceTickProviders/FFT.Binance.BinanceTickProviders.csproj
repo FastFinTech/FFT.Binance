@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="FFT.FileManagement" Version="0.0.5" />
-    <PackageReference Include="FFT.Market" Version="0.0.24" />
+    <PackageReference Include="FFT.Market" Version="0.0.29" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,18 +20,18 @@ namespace FFT.Binance.BinanceTickProviders
 
   internal sealed class HourProvider : ProviderBase, ITickProvider
   {
-#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
-
     private readonly IFileManager _fileManager;
+    private readonly Func<BinanceApiClient> _getClient;
 
     private ShortTickStream? _tickStream;
 
-    public HourProvider(TickProviderInfo info, IFileManager fileManager)
+    internal HourProvider(TickProviderInfo info, IFileManager fileManager, Func<BinanceApiClient> getClient)
     {
       if (info.From != info.From.ToHourFloor()) throw new ArgumentException("info.From");
       if (info.Until != info.From.AddHours(1)) throw new ArgumentException("info.Until");
 
       _fileManager = fileManager;
+      _getClient = getClient;
       Info = info;
       Name = $"{nameof(HourProvider)} '{info.Instrument.Name}' from {info.From.ToString("yyyy-MM-dd HH:mm")}";
     }
@@ -65,8 +65,7 @@ namespace FFT.Binance.BinanceTickProviders
             _tickStream = new ShortTickStream(Info.Instrument, sequence);
             var isFirstTick = true;
             var tickSizeAsDecimal = (decimal)Info.Instrument.MinPriceIncrement;
-            var client = ClientProvider.GetClient();
-            foreach (var trade in await client.GetAggregateTrades(Info.Instrument.Name, Info.From, Info.Until!.Value))
+            foreach (var trade in await _getClient().GetAggregateTrades(Info.Instrument.Name, Info.From, Info.Until!.Value))
             {
               if (isFirstTick)
               {
@@ -132,7 +131,7 @@ namespace FFT.Binance.BinanceTickProviders
 
     public override IEnumerable<object> GetDependencies()
     {
-      yield break;
+      yield return Info.Instrument;
     }
 
     public override ProviderStatus GetStatus()

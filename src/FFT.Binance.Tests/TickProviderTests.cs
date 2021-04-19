@@ -37,7 +37,7 @@ namespace FFT.Binance.Tests
     public async Task HourProvider()
     {
       var fileManager = FileManager.Create("data");
-      var store = new HourProviderStore(fileManager);
+      var store = Services.BinanceTickProviderStore.GetHourProviderStore();
       var from = TimeStamp.Now.AddHours(-10).ToHourFloor();
       var until = from.AddHours(1);
       var hourProvider = store.GetCreate(new TickProviderInfo
@@ -59,7 +59,7 @@ namespace FFT.Binance.Tests
     public async Task LiveProvider()
     {
       var cts = new CancellationTokenSource(300000);
-      var liveProvider = LiveProviderStore.Instance.GetCreate(_bitcoin);
+      var liveProvider = Services.BinanceTickProviderStore.GetLiveProviderStore().GetCreate(_bitcoin);
       using var usageToken = liveProvider.GetUserCountToken();
       await liveProvider.WaitForReadyAsync(cts.Token);
       var reader = liveProvider.CreateReader();
@@ -74,8 +74,7 @@ namespace FFT.Binance.Tests
     public async Task TickProvider()
     {
       using var timeout = new CancellationTokenSource(3000000);
-      var store = new BinanceTickProviderStore(new("data"));
-      using var provider = store.GetCreate(new TickProviderInfo
+      using var provider = Services.BinanceTickProviderStore.GetCreate(new TickProviderInfo
       {
         From = TimeStamp.Now.AddDays(-1),
         Until = null,
@@ -89,22 +88,5 @@ namespace FFT.Binance.Tests
         count++;
       Assert.IsTrue(count > 1000);
     }
-  }
-
-  internal sealed record Instrument : IInstrument
-  {
-    public string Name { get; init; }
-    public Asset BaseAsset { get; init; }
-    public Asset QuoteAsset { get; init; }
-    public Exchange Exchange { get; init; }
-    public SettlementTime SettlementTime { get; init; }
-    public double MinPriceIncrement { get; init; }
-    public double MinQtyIncrement { get; init; }
-
-    public bool IsTradingDay(DateStamp date) => true;
-
-    public DateStamp ThisOrNextTradingDay(DateStamp date) => date;
-
-    public DateStamp ThisOrPreviousTradingDay(DateStamp date) => date;
   }
 }

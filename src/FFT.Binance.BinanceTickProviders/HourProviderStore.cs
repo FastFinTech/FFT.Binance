@@ -3,6 +3,7 @@
 
 namespace FFT.Binance.BinanceTickProviders
 {
+  using System;
   using FFT.FileManagement;
   using FFT.Market.Providers;
   using FFT.Market.Providers.Ticks;
@@ -10,13 +11,15 @@ namespace FFT.Binance.BinanceTickProviders
   internal sealed class HourProviderStore : ProviderStore<TickProviderInfo, HourProvider>
   {
     private readonly IFileManager _fileManager;
+    private readonly Func<BinanceApiClient> _getClient;
 
-    public HourProviderStore(IFileManager fileManager)
+    internal HourProviderStore(IFileManager fileManager, Func<BinanceApiClient> getClient)
     {
       _fileManager = fileManager;
+      _getClient = getClient;
     }
 
     protected override HourProvider Create(TickProviderInfo info)
-      => new HourProvider(info, _fileManager);
+      => new HourProvider(info, _fileManager, _getClient);
   }
 }

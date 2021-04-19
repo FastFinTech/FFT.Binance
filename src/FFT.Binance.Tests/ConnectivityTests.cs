@@ -10,7 +10,6 @@ namespace FFT.Binance.Tests
   using Microsoft.VisualStudio.TestTools.UnitTesting;
   using static System.Math;
   using static System.MidpointRounding;
-  using static FFT.Binance.Tests.Services;
 
   [TestClass]
   public class ConnectivityTests
@@ -18,9 +17,10 @@ namespace FFT.Binance.Tests
     [TestMethod]
     public async Task Connectivity()
     {
-      await Client.TestConnectivity();
-      var time = await Client.GetServerTime();
-      var orderBooks = await Client.GetTopOrderBooks();
+      var client = Services.BinanceTickProviderStore.GetApiClient();
+      await client.TestConnectivity();
+      var time = await client.GetServerTime();
+      var orderBooks = await client.GetTopOrderBooks();
       var btcOrderBooks = orderBooks.Where(b => b.Symbol.StartsWith("BTC")).ToList();
       var btcUSDOrderBook = orderBooks.Single(b => b.Symbol == "BTCUSDT");
       var btcBidDollars = Round(btcUSDOrderBook.BidQty * btcUSDOrderBook.BidPrice, 2, AwayFromZero);
@@ -34,15 +34,16 @@ namespace FFT.Binance.Tests
       until = TimeStamp.Now.AddDays(-365.25 * 4).ToHourFloor();
       from = until.AddHours(-1);
       until = until.AddMilliseconds(-1);
-      var tradeHistory = await Client.GetAggregateTrades("BTCUSDT", from, until);
+      var tradeHistory = await client.GetAggregateTrades("BTCUSDT", from, until);
     }
 
     [TestMethod]
     public async Task DepthStream()
     {
+      var streamingClient = Services.BinanceTickProviderStore.GetStreamingClient();
       var count = 0;
       using var cts = new CancellationTokenSource(10000);
-      var subscription = await StreamingClient.Subscribe(StreamInfo.FullDepth("BTCUSDT", false));
+      var subscription = await streamingClient.Subscribe(StreamInfo.FullDepth("BTCUSDT", false));
       await foreach (var book in subscription.Reader.ReadAllAsync(cts.Token))
       {
         if (++count == 2)
@@ -53,7 +54,8 @@ namespace FFT.Binance.Tests
     [TestMethod]
     public async Task ExchangeInfo()
     {
-      var exchangeInfo = await Client.GetExchangeInformation();
+      var client = Services.BinanceTickProviderStore.GetApiClient();
+      var exchangeInfo = await client.GetExchangeInformation();
     }
   }
 }

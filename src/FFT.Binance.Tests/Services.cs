@@ -4,25 +4,21 @@
 namespace FFT.Binance.Tests
 {
   using System;
+  using FFT.Binance.BinanceTickProviders;
 
   internal static class Services
   {
     static Services()
     {
-      BinanceApiClientOptions = new BinanceApiClientOptions
+      BinanceTickProviderStore = new(new("D:/BinanceTickData"), new BinanceApiClientOptions
       {
         ApiKey = Environment.GetEnvironmentVariable("Binance_ApiKey")!,
         SecretKey = Environment.GetEnvironmentVariable("Binance_ApiSecret")!,
-      };
-
-      Client = new BinanceApiClient(BinanceApiClientOptions);
-      StreamingClient = new BinanceApiStreamingClient { ApiClient = Client };
+        MaxSimultaneousRequests = 2,
+        RequestTimeout = TimeSpan.FromMinutes(10),
+      });
     }
 
-    public static BinanceApiClientOptions BinanceApiClientOptions { get; }
-
-    public static BinanceApiClient Client { get; }
-
-    public static BinanceApiStreamingClient StreamingClient { get; }
+    public static BinanceTickProviderStore BinanceTickProviderStore { get; }
   }
 }

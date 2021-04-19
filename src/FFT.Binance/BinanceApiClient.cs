@@ -4,63 +4,67 @@
 namespace FFT.Binance
 {
   using System;
-  using System.Buffers;
   using System.Collections.Generic;
   using System.Collections.Immutable;
-  using System.Globalization;
   using System.Linq;
   using System.Net.Http;
   using System.Net.Http.Json;
-  using System.Net.WebSockets;
-  using System.Runtime.CompilerServices;
-  using System.Text;
-  using System.Text.Json;
   using System.Threading;
   using System.Threading.Tasks;
   using FFT.Binance.Serialization;
   using FFT.Disposables;
-  using FFT.Subscriptions;
   using FFT.TimeStamps;
   using Microsoft.AspNetCore.WebUtilities;
   using Nito.AsyncEx;
+  using static System.Globalization.CultureInfo;
+  using static System.Globalization.NumberStyles;
 
   /// <summary>
-  /// Provides access to Binance market data. This is a single-use object. It
-  /// disposes itself when the connection drops.
+  /// Provides access to non-streaming Binance market data via the rest api.
   /// </summary>
   public sealed partial class BinanceApiClient : DisposeBase, IDisposable
   {
     private static readonly IReadOnlyList<int> _orderBookDepthLimits = new List<int>
     {
       5, 10, 20, 50, 100, 500, 1000, 5000,
-    }.AsReadOnly();
+    };
 
     /// <summary>
     /// Used for making rest api requests.
     /// </summary>
     private readonly HttpClient _client;
 
-    public readonly AsyncSemaphore _simultaneousRequests;
+    /// <summary>
+    /// Used to limit the number of requests that can be simultaneously made.
+    /// Currently this one semaphore is used for all request types. This could
+    /// be updated in future to have a different semaphore for historical data
+    /// downloads than for order commands.
+    /// </summary>
+    private readonly AsyncSemaphore _simultaneousRequests;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BinanceApiClient"/>
-    /// class and triggers immediate connection to the streaming websocket.
+    /// Initializes a new instance of the <see cref="BinanceApiClient"/> class
+    /// and triggers immediate connection to the streaming websocket.
     /// </summary>
     /// <param name="options">Configures the client, particularly for
     /// authentication. Can be left <c>null</c> if you are only accessing
-    /// functions that do not require authentication.</param>
-    public BinanceApiClient(BinanceApiClientOptions options)
+    /// functions that do not require authentication and are happy with all
+    /// default values..</param>
+    public BinanceApiClient(BinanceApiClientOptions? options = null)
     {
+      options ??= new();
       // This allows connection-reuse for multiple rest api calls. It requires
       // targeting net5 as discussed here:
       // https://github.com/dotnet/runtime/issues/24613
       _client = new(new SocketsHttpHandler());
       _client.BaseAddress = new("https://api.binance.com");
+      _client.Timeout = options.RequestTimeout;
 
-      Options = options;
       _simultaneousRequests = new AsyncSemaphore(options.MaxSimultaneousRequests);
       if (!string.IsNullOrWhiteSpace(options.ApiKey))
-        _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", Options.ApiKey);
+        _client.DefaultRequestHeaders.Add("X-MBX-APIKEY", options.ApiKey);
+
+      Options = options;
     }
 
     /// <inheritdoc/>
@@ -74,11 +78,9 @@ namespace FFT.Binance
   public partial class BinanceApiClient
   {
     /// <summary>
-    /// Configures this <see cref="BinanceApiClient"/> instance. May be
-    /// <c>null</c> if this instance is not intended for use with functions that
-    /// require authentication.
+    /// Configuration for this <see cref="BinanceApiClient"/> instance.
     /// </summary>
-    public BinanceApiClientOptions? Options { get; }
+    public BinanceApiClientOptions Options { get; }
 
     /// <summary>
     /// Current used weight for the local IP for all request rate limiters
@@ -92,12 +94,37 @@ namespace FFT.Binance
     /// </summary>
     public int RetryAfterSeconds { get; private set; } = 0;
 
+    private async Task<T> ParseResponse<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+      // TODO: Implement usage of this value.
+      if (response.Headers.TryGetValues("X-MBX-USED-WEIGHT", out var usedWeightResponse))
+        UsedWeight = int.Parse(usedWeightResponse.First(), Any, InvariantCulture);
+
+      // TODO: Implement usage of this value.
+      if (response.Headers.TryGetValues("Retry-After", out var retryAfterResponse))
+        RetryAfterSeconds = int.Parse(retryAfterResponse.First(), Any, InvariantCulture);
+      else
+        RetryAfterSeconds = 0;
+
+      // TODO: Parse and store the
+      // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
+
+      await RequestFailedException.ThrowIfNecessary(response);
+
+      return (await response.Content.ReadFromJsonAsync<T>(SerializationOptions.Instance, cancellationToken))!;
+    }
+  }
+
+  // Market data (rest api)
+  public partial class BinanceApiClient
+  {
     /// <summary>
     /// This method completes successfully if a connection ping test succeeded.
     /// </summary>
     public async Task TestConnectivity(CancellationToken cancellationToken = default)
     {
       using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, "api/v3/ping");
       using var response = await _client.SendAsync(request, linked.Token);
       await RequestFailedException.ThrowIfNecessary(response);
@@ -109,33 +136,15 @@ namespace FFT.Binance
     public async Task<ServerTimeResponse> GetServerTime(CancellationToken cancellationToken = default)
     {
       using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);
+      using var wait = await _simultaneousRequests.LockAsync(linked.Token);
       using var request = new HttpRequestMessage(HttpMethod.Get, "api/v3/time");
       using var response = await _client.SendAsync(request, linked.Token);
       return await ParseResponse<ServerTimeResponse>(response, linked.Token);
     }
 
-    private async Task<T> ParseResponse<T>(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-      if (response.Headers.TryGetValues("X-MBX-USED-WEIGHT", out var usedWeightResponse))
-        UsedWeight = int.Parse(usedWeightResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
-
-      if (response.Headers.TryGetValues("Retry-After", out var retryAfterResponse))
-        RetryAfterSeconds = int.Parse(retryAfterResponse.First(), NumberStyles.Any, CultureInfo.InvariantCulture);
-      else
-        RetryAfterSeconds = 0;
-
-      await RequestFailedException.ThrowIfNecessary(response);
-
-      // TODO: Parse and store the
-      // X-MBX-ORDER-COUNT-(intervalNum)(intervalLetter) response headers.
-
-      return (await response.Content.ReadFromJsonAsync<T>(SerializationOptions.Instance, cancellationToken))!;
-    }
-  }
-
-  // Market data (rest api)
-  public partial class BinanceApiClient
-  {
+    /// <summary>
+    /// Gets general information from the exchange.
+    /// </summary>
     public async Task<ExchangeInfoResponse> GetExchangeInformation(CancellationToken cancellationToken = default)
     {
       using var linked = CancellationTokenSource.CreateLinkedTokenSource(DisposedToken, cancellationToken);

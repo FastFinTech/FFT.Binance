@@ -3,18 +3,22 @@
 
 namespace FFT.Binance.BinanceTickProviders
 {
+  using System;
   using FFT.Market.Instruments;
   using FFT.Market.Providers;
 
   internal sealed class LiveProviderStore : ProviderStore<IInstrument, LiveProvider>
   {
-    internal static readonly LiveProviderStore Instance = new();
+    private readonly Func<BinanceApiClient> _getClient;
+    private readonly Func<BinanceApiStreamingClient> _getStreamingClient;
 
-    private LiveProviderStore()
+    internal LiveProviderStore(Func<BinanceApiClient> getClient, Func<BinanceApiStreamingClient> getStreamingClient)
     {
+      _getClient = getClient;
+      _getStreamingClient = getStreamingClient;
     }
 
     protected override LiveProvider Create(IInstrument instrument)
-      => new LiveProvider(instrument);
+      => new LiveProvider(instrument, _getClient, _getStreamingClient);
   }
 }

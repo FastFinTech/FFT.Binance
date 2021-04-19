@@ -22,7 +22,7 @@ namespace FFT.Binance.BinanceTickProviders
     private readonly IDisposable _disposables;
     private readonly IReadOnlyList<ITickProvider> _providers;
 
-    internal BinanceTickProvider(TickProviderInfo info, HourProviderStore hourProviderStore)
+    internal BinanceTickProvider(TickProviderInfo info, HourProviderStore hourProviderStore, LiveProviderStore liveProviderStore)
     {
       Info = info;
       Name = $"Binance Tick Provider for {info.Instrument.Name} from {info.From.GetDate()}";
@@ -57,7 +57,7 @@ namespace FFT.Binance.BinanceTickProviders
 
       if (Info.Until is null)
       {
-        var liveProvider = LiveProviderStore.Instance.GetCreate(info.Instrument);
+        var liveProvider = liveProviderStore.GetCreate(info.Instrument);
 
         // Remove any hour providers that have data beyond the start of the live
         // provider. (This can happen when the liveProvider is more than an hour

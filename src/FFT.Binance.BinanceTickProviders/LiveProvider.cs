@@ -17,10 +17,14 @@ namespace FFT.Binance.BinanceTickProviders
   internal sealed class LiveProvider : ProviderBase, ITickProvider
   {
     private readonly ShortTickStream _tickStream;
+    private readonly Func<BinanceApiClient> _getClient;
+    private readonly Func<BinanceApiStreamingClient> _getStreamingClient;
 
-    public LiveProvider(IInstrument instrument)
+    internal LiveProvider(IInstrument instrument, Func<BinanceApiClient> getClient, Func<BinanceApiStreamingClient> getStreamingClient)
     {
       _tickStream = new ShortTickStream(instrument);
+      _getClient = getClient;
+      _getStreamingClient = getStreamingClient;
       Info = new TickProviderInfo()
       {
         From = TimeStamp.Now.ToHourFloor(),
@@ -53,17 +57,16 @@ namespace FFT.Binance.BinanceTickProviders
         try
         {
           var tickSizeAsDecimal = (decimal)Info.Instrument.MinPriceIncrement;
-          var streamingClient = ClientProvider.GetStreamingClient();
-          using var subscription = await streamingClient.Subscribe(StreamInfo.AggregatedTrade(Info.Instrument.Name));
+          using var subscription = await _getStreamingClient().Subscribe(StreamInfo.AggregatedTrade(Info.Instrument.Name));
           var firstLiveTrade = (AggregateTrade)await subscription.Reader.ReadAsync(DisposedToken);
 
-          var historicalTrades = await streamingClient.ApiClient!.GetAggregateTrades(Info.Instrument.Name, Info.From, firstLiveTrade.Timestamp);
+          var historicalTrades = await _getClient().GetAggregateTrades(Info.Instrument.Name, Info.From, firstLiveTrade.Timestamp);
           if (historicalTrades.Count > 0)
           {
             FirstTickId = historicalTrades[0].AggregateTradeId;
           }
 
-          foreach(var trade in historicalTrades)
+          foreach (var trade in historicalTrades)
           {
             if (trade.AggregateTradeId >= firstLiveTrade.AggregateTradeId)
               break;

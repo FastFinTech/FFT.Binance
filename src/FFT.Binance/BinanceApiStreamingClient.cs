@@ -75,6 +75,7 @@ namespace FFT.Binance
           var streamType = StreamInfo.ParseStreamType(streamId);
           var broadcastHub = streamType switch
           {
+            StreamType.BookTickerAllMarkets => (BroadcastHubBase)new BookTickerHub(),
             StreamType.BookTicker => (BroadcastHubBase)new BookTickerHub(),
             StreamType.FullDepth => (BroadcastHubBase)new FullDepthHub(),
             StreamType.AggregatedTrade => (BroadcastHubBase)new AggregateTradeHub(),

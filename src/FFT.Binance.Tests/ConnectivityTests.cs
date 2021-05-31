@@ -52,6 +52,20 @@ namespace FFT.Binance.Tests
     }
 
     [TestMethod]
+    public async Task BookTickerAllMarkets()
+    {
+      var streamingClient = Services.BinanceTickProviderStore.GetStreamingClient();
+      var count = 0;
+      using var cts = new CancellationTokenSource(10000);
+      var subscription = await streamingClient.Subscribe(StreamInfo.BookTickerAllMarkets());
+      await foreach (var item in subscription.Reader.ReadAllAsync(cts.Token))
+      {
+        if (++count == 2)
+          return;
+      }
+    }
+
+    [TestMethod]
     public async Task ExchangeInfo()
     {
       var client = Services.BinanceTickProviderStore.GetApiClient();

@@ -1,0 +1,828 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Class BinanceApiClient
+   </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Class BinanceApiClient
+   ">
+    <meta name="generator" content="docfx 2.56.7.0">
+    
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/vs.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script> 
+    <style>    
+      .hljs { white-space: pre; overflow-x: auto; }
+    </style>
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="FFT.Binance.BinanceApiClient">
+  
+  
+  <h1 id="FFT_Binance_BinanceApiClient" data-uid="FFT.Binance.BinanceApiClient" class="text-break">Class BinanceApiClient
+  </h1>
+  <div class="markdown level0 summary"><p>Provides access to non-streaming Binance market data via the rest api.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="inheritance">
+    <h5>Inheritance</h5>
+    <div class="level0"><span class="xref">System.Object</span></div>
+    <div class="level1"><span class="xref">BinanceApiClient</span></div>
+  </div>
+  <div classs="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">IDisposable</span></div>
+  </div>
+  <h6><strong>Namespace</strong>: <a class="xref" href="FFT.Binance.html">FFT.Binance</a></h6>
+  <h6><strong>Assembly</strong>: FFT.Binance.dll</h6>
+  <h5 id="FFT_Binance_BinanceApiClient_syntax">Syntax</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class BinanceApiClient : DisposeBase, IDisposable</code></pre>
+  </div>
+  <h3 id="constructors">Constructors
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient__ctor_System_Nullable_BinanceApiClientOptions__.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.%23ctor(System.Nullable%7BBinanceApiClientOptions%7D)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L53">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient__ctor_" data-uid="FFT.Binance.BinanceApiClient.#ctor*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient__ctor_System_Nullable_BinanceApiClientOptions__" data-uid="FFT.Binance.BinanceApiClient.#ctor(System.Nullable{BinanceApiClientOptions})">BinanceApiClient(Nullable&lt;BinanceApiClientOptions&gt;)</h4>
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="FFT.Binance.BinanceApiClient.html">BinanceApiClient</a> class
+and triggers immediate connection to the streaming websocket.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BinanceApiClient(BinanceApiClientOptions? options = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">BinanceApiClientOptions</span>&gt;</td>
+        <td><span class="parametername">options</span></td>
+        <td><p>Configures the client, particularly for
+authentication. Can be left <code>null</code> if you are only accessing
+functions that do not require authentication and are happy with all
+default values..</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="properties">Properties
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_Options.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.Options%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L83">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_Options_" data-uid="FFT.Binance.BinanceApiClient.Options*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_Options" data-uid="FFT.Binance.BinanceApiClient.Options">Options</h4>
+  <div class="markdown level1 summary"><p>Configuration for this <a class="xref" href="FFT.Binance.BinanceApiClient.html">BinanceApiClient</a> instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BinanceApiClientOptions Options { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">BinanceApiClientOptions</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_RetryAfterSeconds.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.RetryAfterSeconds%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L95">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_RetryAfterSeconds_" data-uid="FFT.Binance.BinanceApiClient.RetryAfterSeconds*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_RetryAfterSeconds" data-uid="FFT.Binance.BinanceApiClient.RetryAfterSeconds">RetryAfterSeconds</h4>
+  <div class="markdown level1 summary"><p>The number of seconds required to wait, in the case of a 429, to prevent
+a ban, or, in the case of a 418, until the ban is over.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int RetryAfterSeconds { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_UsedWeight.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.UsedWeight%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L89">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_UsedWeight_" data-uid="FFT.Binance.BinanceApiClient.UsedWeight*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_UsedWeight" data-uid="FFT.Binance.BinanceApiClient.UsedWeight">UsedWeight</h4>
+  <div class="markdown level1 summary"><p>Current used weight for the local IP for all request rate limiters
+defined.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int UsedWeight { get; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_CustomDispose.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.CustomDispose%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L71">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_CustomDispose_" data-uid="FFT.Binance.BinanceApiClient.CustomDispose*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_CustomDispose" data-uid="FFT.Binance.BinanceApiClient.CustomDispose">CustomDispose()</h4>
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected override void CustomDispose()</code></pre>
+  </div>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetAggregateTrades_System_String_TimeStamp_TimeStamp_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetAggregateTrades(System.String%2CTimeStamp%2CTimeStamp%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L254">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetAggregateTrades_" data-uid="FFT.Binance.BinanceApiClient.GetAggregateTrades*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetAggregateTrades_System_String_TimeStamp_TimeStamp_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetAggregateTrades(System.String,TimeStamp,TimeStamp,CancellationToken)">GetAggregateTrades(String, TimeStamp, TimeStamp, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Get compressed, aggregate trades. Trades that fill at the time, from the
+same taker order, with the same price will have the quantity aggregated.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ImmutableList&lt;AggregateTrade&gt;&gt; GetAggregateTrades(string symbol, TimeStamp from, TimeStamp until, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">symbol</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TimeStamp</span></td>
+        <td><span class="parametername">from</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">TimeStamp</span></td>
+        <td><span class="parametername">until</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">ImmutableList</span>&lt;<span class="xref">AggregateTrade</span>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetExchangeInformation_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetExchangeInformation(CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L148">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetExchangeInformation_" data-uid="FFT.Binance.BinanceApiClient.GetExchangeInformation*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetExchangeInformation_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetExchangeInformation(CancellationToken)">GetExchangeInformation(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Gets general information from the exchange.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ExchangeInfoResponse&gt; GetExchangeInformation(CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">ExchangeInfoResponse</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetLastPrice_System_String_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetLastPrice(System.String%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L226">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetLastPrice_" data-uid="FFT.Binance.BinanceApiClient.GetLastPrice*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetLastPrice_System_String_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetLastPrice(System.String,CancellationToken)">GetLastPrice(String, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Get the last trade price for the given <code data-dev-comment-type="paramref" class="paramref">symbol</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;LastPrice&gt; GetLastPrice(string symbol, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">symbol</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<a class="xref" href="FFT.Binance.LastPrice.html">LastPrice</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetLastPrices_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetLastPrices(CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L241">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetLastPrices_" data-uid="FFT.Binance.BinanceApiClient.GetLastPrices*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetLastPrices_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetLastPrices(CancellationToken)">GetLastPrices(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Get the last traded price for all instruments on the exchange.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ImmutableList&lt;LastPrice&gt;&gt; GetLastPrices(CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">ImmutableList</span>&lt;<a class="xref" href="FFT.Binance.LastPrice.html">LastPrice</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetOrderBook_System_String_System_Int32_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetOrderBook(System.String%2CSystem.Int32%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L161">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetOrderBook_" data-uid="FFT.Binance.BinanceApiClient.GetOrderBook*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetOrderBook_System_String_System_Int32_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetOrderBook(System.String,System.Int32,CancellationToken)">GetOrderBook(String, Int32, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Gets the current order book for the given <code data-dev-comment-type="paramref" class="paramref">symbol</code> to a
+maximum depth of <code data-dev-comment-type="paramref" class="paramref">limit</code> values.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;OrderBookResponse&gt; GetOrderBook(string symbol, int limit = 100, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">symbol</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">limit</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<a class="xref" href="FFT.Binance.OrderBookResponse.html">OrderBookResponse</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetServerTime_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetServerTime(CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L136">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetServerTime_" data-uid="FFT.Binance.BinanceApiClient.GetServerTime*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetServerTime_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetServerTime(CancellationToken)">GetServerTime(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Gets the current time on the Binance api server.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ServerTimeResponse&gt; GetServerTime(CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<a class="xref" href="FFT.Binance.ServerTimeResponse.html">ServerTimeResponse</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetTopOrderBook_System_String_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetTopOrderBook(System.String%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L179">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetTopOrderBook_" data-uid="FFT.Binance.BinanceApiClient.GetTopOrderBook*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetTopOrderBook_System_String_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetTopOrderBook(System.String,CancellationToken)">GetTopOrderBook(String, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Get the top order book for the given <code data-dev-comment-type="paramref" class="paramref">symbol</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;TopOrderBook&gt; GetTopOrderBook(string symbol, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">symbol</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<a class="xref" href="FFT.Binance.TopOrderBook.html">TopOrderBook</a>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetTopOrderBooks_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetTopOrderBooks(CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L194">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetTopOrderBooks_" data-uid="FFT.Binance.BinanceApiClient.GetTopOrderBooks*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetTopOrderBooks_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetTopOrderBooks(CancellationToken)">GetTopOrderBooks(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Get the top order book for all instruments.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ImmutableList&lt;TopOrderBook&gt;&gt; GetTopOrderBooks(CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">ImmutableList</span>&lt;<a class="xref" href="FFT.Binance.TopOrderBook.html">TopOrderBook</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_GetTrades_System_String_System_Int32_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.GetTrades(System.String%2CSystem.Int32%2CCancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L208">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_GetTrades_" data-uid="FFT.Binance.BinanceApiClient.GetTrades*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_GetTrades_System_String_System_Int32_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.GetTrades(System.String,System.Int32,CancellationToken)">GetTrades(String, Int32, CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>Gets the most recent trades for the given <code data-dev-comment-type="paramref" class="paramref">symbol</code> up
+to maximum <code data-dev-comment-type="paramref" class="paramref">limit</code> number of values. Values are
+returned in ascending chronological order.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;ImmutableList&lt;HistoricalTrade&gt;&gt; GetTrades(string symbol, int limit = 500, CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.String</span></td>
+        <td><span class="parametername">symbol</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Int32</span></td>
+        <td><span class="parametername">limit</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span>&lt;<span class="xref">ImmutableList</span>&lt;<a class="xref" href="FFT.Binance.HistoricalTrade.html">HistoricalTrade</a>&gt;&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient_TestConnectivity_CancellationToken_.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient.TestConnectivity(CancellationToken)%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L124">View Source</a>
+  </span>
+  <a id="FFT_Binance_BinanceApiClient_TestConnectivity_" data-uid="FFT.Binance.BinanceApiClient.TestConnectivity*"></a>
+  <h4 id="FFT_Binance_BinanceApiClient_TestConnectivity_CancellationToken_" data-uid="FFT.Binance.BinanceApiClient.TestConnectivity(CancellationToken)">TestConnectivity(CancellationToken)</h4>
+  <div class="markdown level1 summary"><p>This method completes successfully if a connection ping test succeeded.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="decalaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task TestConnectivity(CancellationToken cancellationToken = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">CancellationToken</span></td>
+        <td><span class="parametername">cancellationToken</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 class="returns">Returns</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">Task</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">IDisposable</span>
+  </div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/FastFinTech/FFT.Binance/new/main/apiSpec/new?filename=FFT_Binance_BinanceApiClient.md&amp;value=---%0Auid%3A%20FFT.Binance.BinanceApiClient%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                  </li>
+                  <li>
+                    <a href="https://github.com/FastFinTech/FFT.Binance/blob/main/src/FFT.Binance/BinanceApiClient.cs/#L119" class="contribution-link">View Source</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            
+            <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+    <script src="//unpkg.com/highlightjs-dotnetconfig@0.9.1/dist/dotnetconfig.min.js"></script>
+  </body>
+</html>

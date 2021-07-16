@@ -23,10 +23,10 @@ namespace FFT.Binance
       public void RemoveSubscriber(IWritable subscriber)
         => Subscribers.Remove(subscriber);
 
-      public void Complete()
+      public void Complete(Exception? error)
       {
         foreach (var subscriber in Subscribers)
-          subscriber.Complete();
+          subscriber.Complete(error);
       }
 
       public virtual void Handle(object message)

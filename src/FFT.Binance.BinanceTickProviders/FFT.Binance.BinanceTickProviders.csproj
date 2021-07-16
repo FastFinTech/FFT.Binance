@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="FFT.FileManagement" Version="0.0.5" />
-    <PackageReference Include="FFT.Market" Version="0.0.29" />
+    <PackageReference Include="FFT.Market" Version="0.0.50" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,9 +27,9 @@
 
     <ItemGroup>
     <PackageReference Include="ConfigureAwait.Fody" Version="3.3.1" PrivateAssets="All" />
-    <PackageReference Include="FFT.Disposables" Version="0.0.6" />
-    <PackageReference Include="FFT.TimeStamps" Version="0.0.20" />
-    <PackageReference Include="Fody" Version="6.5.1">
+    <PackageReference Include="FFT.Disposables" Version="0.0.8" />
+    <PackageReference Include="FFT.TimeStamps" Version="0.0.21" />
+    <PackageReference Include="Fody" Version="6.5.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -41,10 +41,6 @@
   </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Update="Nerdbank.GitVersioning" Version="3.4.194">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
+      <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" />
     </ItemGroup>
-  
 </Project>
